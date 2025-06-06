@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MoreTranz Image Upscaler</title>
+</head>
+<body>
+  <h1>Upload an Image to Upscale</h1>
+  <form id="upload-form" enctype="multipart/form-data">
+    <input type="file" name="image_file" accept="image/*" required />
+    <button type="submit">Upscale</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+
+      const response = await fetch('/upscale', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const img = document.createElement('img');
+        img.src = url;
+        document.getElementById('result').appendChild(img);
+      } else {
+        const error = await response.json();
+        alert('Error: ' + error.error);
+      }
+    });
+  </script>
+</body>
+</html>
