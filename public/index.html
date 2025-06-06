@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MoreTranz Image Upscaler</title>
+  <style>
+    body { background: #000; color: #fff; font-family: sans-serif; text-align: center; }
+    #upload-area { border: 3px dashed #555; padding: 40px; margin: 2rem auto; width: 80%; max-width: 500px; background-color: #111; cursor: pointer; }
+    input[type="file"] { display: none; }
+    #output { margin-top: 2rem; }
+    img { max-width: 90%; margin: 1rem auto; }
+    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>MoreTranz AI Upscaler</h1>
+  <div id="upload-area">Click or drop an image to upscale</div>
+  <input type="file" id="file-input" accept="image/*">
+  <button id="upload-btn">Upscale Image</button>
+  <div id="output"></div>
+  <script>
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const output = document.getElementById('output');
+    let selectedFile = null;
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#0f0'; });
+    uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = '#555');
+    uploadArea.addEventListener('drop', e => {
+      e.preventDefault(); uploadArea.style.borderColor = '#555';
+      selectedFile = e.dataTransfer.files[0]; uploadArea.textContent = selectedFile.name;
+    });
+
+    fileInput.addEventListener('change', () => {
+      selectedFile = fileInput.files[0]; uploadArea.textContent = selectedFile.name;
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!selectedFile) return alert('Please select or drop an image first.');
+      const formData = new FormData(); formData.append('image_file', selectedFile);
+      output.innerHTML = 'Upscaling... Please wait...';
+      try {
+        const res = await fetch('/upscale', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Upscale failed.');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        output.innerHTML = `<img src="${url}" alt="Upscaled Image">`;
+      } catch (err) {
+        output.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
