@@ -23,7 +23,7 @@
       transition: background-color 0.3s;
     }
     #drop-area.dragover {
-      background-color: #111;
+      background-color: #222;
     }
     #comparison {
       position: relative;
@@ -39,11 +39,13 @@
     #comparison img {
       width: 100%;
       height: auto;
+      max-height: 600px;
       display: block;
       position: absolute;
       top: 0;
       left: 0;
       border-radius: 6px;
+      object-fit: contain;
     }
     #afterImage {
       clip-path: inset(0 50% 0 0);
