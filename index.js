@@ -1,4 +1,4 @@
-// index.js — MoreTranz Pixelcut Image Upscaler (Updated Endpoint)
+// index.js — MoreTranz Pixelcut Image Upscaler (Fixed 'scale' parameter)
 
 const express = require('express');
 const multer = require('multer');
@@ -24,6 +24,7 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
 
     const form = new FormData();
     form.append('image', fileStream);
+    form.append('scale', '2'); // ensure scale is included as string
 
     const response = await axios.post('https://api.developer.pixelcut.ai/v1/upscale', form, {
       headers: {
@@ -39,8 +40,9 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     res.json({ image: `data:image/png;base64,${base64Image}` });
 
   } catch (err) {
-    console.error('Upscale error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Upscaling failed.' });
+    const errorMessage = err.response?.data || err.message;
+    console.error('Upscale error:', errorMessage);
+    res.status(500).json({ error: 'Upscaling failed.', details: errorMessage });
   }
 });
 
