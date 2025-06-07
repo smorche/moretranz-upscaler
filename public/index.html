@@ -25,6 +25,38 @@
     #drop-area.dragover {
       background-color: #111;
     }
+    #comparison {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    .preview-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 45%;
+    }
+    img {
+      max-width: 100%;
+      border: 1px solid #00f0ff;
+      border-radius: 6px;
+    }
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #00f0ff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 1rem auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     button {
       margin-top: 1rem;
       padding: 0.5rem 1rem;
@@ -33,21 +65,6 @@
       color: #000;
       cursor: pointer;
       font-weight: bold;
-    }
-    #preview, #result {
-      margin-top: 2rem;
-    }
-    img {
-      max-width: 90%;
-      border: 1px solid #00f0ff;
-      border-radius: 6px;
-    }
-    canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      z-index: 9999;
     }
   </style>
 </head>
@@ -58,16 +75,28 @@
     <p>Drag & Drop Image Here or Click to Select</p>
     <input type="file" id="fileInput" accept="image/*" style="display:none">
   </div>
-  <button onclick="uploadAndUpscale()">Upscale Image</button>
 
-  <div id="preview"></div>
-  <div id="result"></div>
+  <div class="loader" id="loader" style="display:none;"></div>
 
-  <canvas id="confetti"></canvas>
+  <div id="comparison">
+    <div class="preview-block">
+      <img id="beforeImage" src="" alt="Original"/>
+      <span>Original</span>
+    </div>
+    <div class="preview-block">
+      <img id="afterImage" src="" alt="Upscaled"/>
+      <span>Upscaled</span>
+      <button id="downloadBtn" style="display:none">Download</button>
+    </div>
+  </div>
 
   <script>
     const dropArea = document.getElementById('drop-area');
     const fileInput = document.getElementById('fileInput');
+    const loader = document.getElementById('loader');
+    const beforeImage = document.getElementById('beforeImage');
+    const afterImage = document.getElementById('afterImage');
+    const downloadBtn = document.getElementById('downloadBtn');
 
     dropArea.addEventListener('click', () => fileInput.click());
 
@@ -80,15 +109,22 @@
       e.preventDefault();
       dropArea.classList.remove('dragover');
       fileInput.files = e.dataTransfer.files;
+      uploadAndUpscale();
     });
+
+    fileInput.addEventListener('change', uploadAndUpscale);
 
     function uploadAndUpscale() {
       const file = fileInput.files[0];
       if (!file) return alert('Please choose or drop an image');
 
+      loader.style.display = 'block';
+      downloadBtn.style.display = 'none';
+      afterImage.src = '';
+
       const reader = new FileReader();
       reader.onload = () => {
-        document.getElementById('preview').innerHTML = `<h2>Original Image</h2><img src="${reader.result}" alt="Original"/>`;
+        beforeImage.src = reader.result;
       };
       reader.readAsDataURL(file);
 
@@ -101,48 +137,21 @@
       })
       .then(res => res.json())
       .then(data => {
-        document.getElementById('result').innerHTML = `<h2>Upscaled Image</h2><img src="${data.image}" alt="Upscaled"/>`;
-        launchConfetti();
+        loader.style.display = 'none';
+        afterImage.src = data.image;
+        downloadBtn.style.display = 'inline-block';
+        downloadBtn.onclick = () => {
+          const link = document.createElement('a');
+          link.href = data.image;
+          link.download = 'upscaled-image.png';
+          link.click();
+        };
       })
       .catch(err => {
+        loader.style.display = 'none';
         console.error(err);
         alert('Upscale failed.');
       });
-    }
-
-    // Confetti effect
-    function launchConfetti() {
-      const canvas = document.getElementById('confetti');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      const particles = [];
-
-      for (let i = 0; i < 100; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 6 + 2,
-          speedY: Math.random() * 3 + 2,
-          color: `hsl(${Math.random() * 360}, 100%, 50%)`
-        });
-      }
-
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.y += p.speedY;
-          if (p.y > canvas.height) p.y = 0;
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
-        });
-        requestAnimationFrame(animate);
-      }
-
-      animate();
-      setTimeout(() => canvas.width = canvas.height = 0, 3000);
     }
   </script>
 </body>
