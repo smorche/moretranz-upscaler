@@ -108,8 +108,8 @@
     <div class="limits">
       Max file size: 25MB<br>
       Min resolution: 64x64px<br>
-      Max resolution (2x): 3000x3000px<br>
-      Max resolution (4x): 1500x1500px
+      Max resolution (2x): 6000x6000px<br>
+      Max resolution (4x): 3000x3000px
     </div>
   </div>
 
@@ -173,8 +173,8 @@
             return;
           }
 
-          if ((scale === 2 && (width > 3000 || height > 3000)) ||
-              (scale === 4 && (width > 1500 || height > 1500))) {
+          if ((scale === 2 && (width > 6000 || height > 6000)) ||
+              (scale === 4 && (width > 3000 || height > 3000))) {
             alert(`Image too large for ${scale}x upscale.`);
             return;
           }
@@ -210,10 +210,17 @@
         downloadBtn.style.display = 'inline-block';
         celebrate();
       })
-      .catch(err => {
+      .catch(async err => {
         loader.style.display = 'none';
-        alert('Upscaling failed. Please try again.');
-        console.error('Upscale failed:', err);
+        try {
+          const buffer = await err.response.arrayBuffer();
+          const decoded = new TextDecoder().decode(buffer);
+          const json = JSON.parse(decoded);
+          alert(`Upscaling error: ${json.error}`);
+        } catch (e) {
+          alert('Upscaling failed. Please try again later.');
+          console.error('Upscale error:', err);
+        }
       });
     }
 
