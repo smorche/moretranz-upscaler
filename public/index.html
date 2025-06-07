@@ -26,7 +26,6 @@
       background-color: #111;
     }
     #comparison {
-      display: none;
       position: relative;
       width: 90%;
       max-width: 700px;
@@ -35,22 +34,24 @@
       border: 2px solid #00f0ff;
       border-radius: 6px;
       height: auto;
+      display: none;
     }
     #comparison img {
       width: 100%;
       height: auto;
-      display: none;
+      display: block;
       position: absolute;
       top: 0;
       left: 0;
       border-radius: 6px;
     }
-    #afterImage.shown,
-    #beforeImage.shown {
-      display: block;
-    }
     #afterImage {
       clip-path: inset(0 50% 0 0);
+      z-index: 2;
+      display: none;
+    }
+    #beforeImage {
+      z-index: 1;
     }
     #slider {
       position: absolute;
@@ -60,7 +61,7 @@
       height: 100%;
       background: #00f0ff;
       cursor: ew-resize;
-      z-index: 10;
+      z-index: 3;
     }
     .loader {
       border: 6px solid #f3f3f3;
@@ -133,13 +134,12 @@
 
       loader.style.display = 'block';
       downloadBtn.style.display = 'none';
-      afterImage.src = '';
-      comparison.style.display = 'none';
+      comparison.style.display = 'block';
+      afterImage.style.display = 'none';
 
       const reader = new FileReader();
       reader.onload = () => {
         beforeImage.src = reader.result;
-        beforeImage.classList.add('shown');
       };
       reader.readAsDataURL(file);
 
@@ -154,11 +154,8 @@
       .then(data => {
         loader.style.display = 'none';
         afterImage.src = data.image;
-        afterImage.onload = () => {
-          afterImage.classList.add('shown');
-          comparison.style.display = 'block';
-          initSlider();
-        };
+        afterImage.style.display = 'block';
+        initSlider();
         downloadBtn.style.display = 'inline-block';
         downloadBtn.onclick = () => {
           const link = document.createElement('a');
