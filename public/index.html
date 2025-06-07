@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoreTranz Image Upscaler - Side-by-Side</title>
+  <title>MoreTranz Pixelcut Upscaler</title>
   <style>
     body {
       background-color: #000;
@@ -13,39 +13,67 @@
       margin: 0;
       padding: 2rem;
     }
-    #comparison {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      gap: 2rem;
+    input[type="file"] {
+      margin-top: 1rem;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #00f0ff;
+      border: none;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #preview, #result {
       margin-top: 2rem;
     }
-    .preview-block {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 45%;
-    }
-    .preview-img {
-      max-width: 100%;
+    img {
+      max-width: 90%;
       border: 1px solid #00f0ff;
       border-radius: 6px;
     }
   </style>
 </head>
 <body>
-  <h1>MoreTranz Image Upscaler (Side-by-Side View)</h1>
+  <h1>MoreTranz Pixelcut Upscaler</h1>
+  <input type="file" id="fileInput" accept="image/*">
+  <button onclick="uploadAndUpscale()">Upscale Image</button>
 
-  <div id="comparison">
-    <div class="preview-block">
-      <img id="beforeImage" class="preview-img" src="/placeholder-original.png" alt="Original"/>
-      <span>Original</span>
-    </div>
-    <div class="preview-block">
-      <img id="afterImage" class="preview-img" src="/placeholder-upscaled.png" alt="Upscaled"/>
-      <span>Upscaled</span>
-    </div>
-  </div>
+  <div id="preview"></div>
+  <div id="result"></div>
+
+  <script>
+    function uploadAndUpscale() {
+      const fileInput = document.getElementById('fileInput');
+      const preview = document.getElementById('preview');
+      const result = document.getElementById('result');
+      const file = fileInput.files[0];
+      if (!file) return alert('Please choose an image');
+
+      // Show original preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.innerHTML = `<h2>Original Image</h2><img src="${reader.result}" alt="Original"/>`;
+      };
+      reader.readAsDataURL(file);
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      fetch('/upscale', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        result.innerHTML = `<h2>Upscaled Image</h2><img src="${data.image}" alt="Upscaled"/>`;
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Upscale failed.');
+      });
+    }
+  </script>
 </body>
 </html>
