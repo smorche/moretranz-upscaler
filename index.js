@@ -47,7 +47,7 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       {
         headers: {
           ...form.getHeaders(),
-          'x-api-key': 'e7e9a234afcc4d5590817fa33053ff24',
+          'x-api-key': '27caa04def3e409187f062591b94d6e1',
         },
         responseType: 'arraybuffer',
       }
