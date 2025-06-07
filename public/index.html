@@ -26,7 +26,7 @@
       background-color: #111;
     }
     #comparison {
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: flex-start;
       flex-wrap: wrap;
@@ -97,6 +97,7 @@
     const beforeImage = document.getElementById('beforeImage');
     const afterImage = document.getElementById('afterImage');
     const downloadBtn = document.getElementById('downloadBtn');
+    const comparison = document.getElementById('comparison');
 
     dropArea.addEventListener('click', () => fileInput.click());
 
@@ -121,10 +122,12 @@
       loader.style.display = 'block';
       downloadBtn.style.display = 'none';
       afterImage.src = '';
+      comparison.style.display = 'none';
 
       const reader = new FileReader();
       reader.onload = () => {
         beforeImage.src = reader.result;
+        comparison.style.display = 'flex';
       };
       reader.readAsDataURL(file);
 
