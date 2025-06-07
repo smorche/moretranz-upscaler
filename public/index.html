@@ -27,40 +27,18 @@
       transition: background-color 0.3s ease;
     }
     #drop-area.hover {
-      background-color: #333;
+      background-color: #222;
     }
     #fileElem {
       margin-top: 1rem;
     }
-    #scaleSelector {
-      margin-top: 1rem;
-      background-color: #000;
-      color: #00f0ff;
-      border: 1px solid #00f0ff;
-      padding: 0.5rem;
-      border-radius: 4px;
-    }
-    #comparison {
-      display: none;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-    .preview-img {
-      max-width: 45%;
+    #result {
+      max-width: 600px;
+      width: 100%;
+      margin: 2rem auto 0;
       border: 1px solid #00f0ff;
       border-radius: 6px;
-    }
-    #downloadBtn {
-      margin-top: 1.5rem;
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      background-color: #00f0ff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      display: none;
+      display: block;
     }
     .features {
       display: flex;
@@ -75,16 +53,6 @@
     .highlight {
       color: #00f0ff;
       font-weight: bold;
-    }
-    #loader {
-      display: none;
-      color: #00f0ff;
-      margin-top: 1rem;
-    }
-    .limits {
-      font-size: 0.9rem;
-      color: #999;
-      margin-top: 1rem;
     }
   </style>
 </head>
@@ -101,38 +69,14 @@
   <div id="drop-area">
     <p>Drag & Drop an Image Here</p>
     <input type="file" id="fileElem" accept="image/*">
-    <select id="scaleSelector">
-      <option value="2">2x Upscale</option>
-      <option value="4">4x Upscale</option>
-    </select>
-    <div class="limits">
-      Max file size: 25MB<br>
-      Min resolution: 64x64px<br>
-      Max resolution (2x): 6000x6000px<br>
-      Max resolution (4x): 3000x3000px
-    </div>
   </div>
 
-  <div id="loader">🔄 Upscaling in progress...</div>
-
-  <div id="comparison">
-    <img id="beforeImage" class="preview-img" alt="Original"/>
-    <img id="afterImage" class="preview-img" alt="Upscaled"/>
-  </div>
-
-  <button id="downloadBtn">Download Upscaled Image</button>
+  <img id="result" alt="Upscaled Preview" style="display:none"/>
 
   <script>
     const dropArea = document.getElementById('drop-area');
     const input = document.getElementById('fileElem');
-    const scaleSelector = document.getElementById('scaleSelector');
-    const loader = document.getElementById('loader');
-    const comparison = document.getElementById('comparison');
-    const beforeImage = document.getElementById('beforeImage');
-    const afterImage = document.getElementById('afterImage');
-    const downloadBtn = document.getElementById('downloadBtn');
-
-    let upscaledDataUrl = '';
+    const preview = document.getElementById('result');
 
     dropArea.addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -155,47 +99,8 @@
     });
 
     function handleFile(file) {
-      if (file.size > 25 * 1024 * 1024) {
-        alert('File is too large. Max size is 25MB.');
-        return;
-      }
-
-      const img = new Image();
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        img.onload = () => {
-          const { width, height } = img;
-          const scale = parseInt(scaleSelector.value);
-
-          if (width < 64 || height < 64) {
-            alert('Image is too small. Minimum resolution is 64x64px.');
-            return;
-          }
-
-          if ((scale === 2 && (width > 6000 || height > 6000)) ||
-              (scale === 4 && (width > 3000 || height > 3000))) {
-            alert(`Image too large for ${scale}x upscale.`);
-            return;
-          }
-
-          beforeImage.src = reader.result;
-          uploadImage(file, scale);
-        };
-        img.src = reader.result;
-      };
-
-      reader.readAsDataURL(file);
-    }
-
-    function uploadImage(file, scale) {
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('scale', scale);
-
-      loader.style.display = 'block';
-      comparison.style.display = 'none';
-      downloadBtn.style.display = 'none';
 
       fetch('/upscale', {
         method: 'POST',
@@ -203,54 +108,14 @@
       })
       .then(res => res.json())
       .then(data => {
-        upscaledDataUrl = data.image;
-        afterImage.src = upscaledDataUrl;
-        loader.style.display = 'none';
-        comparison.style.display = 'flex';
-        downloadBtn.style.display = 'inline-block';
-        celebrate();
+        preview.src = data.image;
+        preview.style.display = 'block';
       })
-      .catch(async err => {
-        loader.style.display = 'none';
-        try {
-          const buffer = await err.response.arrayBuffer();
-          const decoded = new TextDecoder().decode(buffer);
-          const json = JSON.parse(decoded);
-          alert(`Upscaling error: ${json.error}`);
-        } catch (e) {
-          alert('Upscaling failed. Please try again later.');
-          console.error('Upscale error:', err);
-        }
+      .catch(err => {
+        console.error('Upscale failed:', err);
+        alert('Upscaling failed. Please try again.');
       });
     }
-
-    downloadBtn.addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = upscaledDataUrl;
-      a.download = 'upscaled-image.png';
-      a.click();
-    });
-
-    function celebrate() {
-      const emoji = document.createElement('div');
-      emoji.textContent = '🎉';
-      emoji.style.position = 'fixed';
-      emoji.style.top = '50%';
-      emoji.style.left = '50%';
-      emoji.style.transform = 'translate(-50%, -50%) scale(2)';
-      emoji.style.fontSize = '4rem';
-      emoji.style.zIndex = '9999';
-      emoji.style.animation = 'fadeout 1s ease-out forwards';
-      document.body.appendChild(emoji);
-
-      setTimeout(() => {
-        emoji.remove();
-      }, 1000);
-    }
-
-    const styleSheet = document.createElement("style")
-    styleSheet.innerText = `@keyframes fadeout { 0% {opacity:1;} 100% {opacity:0;} }`;
-    document.head.appendChild(styleSheet);
   </script>
 </body>
 </html>
