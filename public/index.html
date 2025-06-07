@@ -160,7 +160,7 @@
 
     function handleUpload(file) {
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', file); // Important field name for multer
 
       previewSection.innerHTML = '';
       const beforeImg = document.createElement('img');
