@@ -1,10 +1,11 @@
-// index.js — MoreTranz Pixelcut Image Upscaler
+// index.js — MoreTranz Pixelcut Image Upscaler (Fixed FormData)
 
 const express = require('express');
 const multer = require('multer');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const FormData = require('form-data');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -21,12 +22,12 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     const imagePath = req.file.path;
     const fileStream = fs.createReadStream(imagePath);
 
-    const formData = new FormData();
-    formData.append('file', fileStream);
+    const form = new FormData();
+    form.append('file', fileStream);
 
-    const response = await axios.post('https://api.pixelcut.ai/api/v1/upscaler', formData, {
+    const response = await axios.post('https://api.pixelcut.ai/api/v1/upscaler', form, {
       headers: {
-        ...formData.getHeaders(),
+        ...form.getHeaders(),
         'x-api-key': process.env.PIXELCUT_API_KEY,
       },
       responseType: 'arraybuffer',
