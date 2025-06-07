@@ -23,7 +23,7 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     const fileStream = fs.createReadStream(imagePath);
 
     const form = new FormData();
-    form.append('file', fileStream);
+    form.append('image', fileStream);
 
     const response = await axios.post('https://api.developer.pixelcut.ai/v1/upscale', form, {
       headers: {
