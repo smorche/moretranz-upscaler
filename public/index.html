@@ -1,56 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MoreTranz Image Upscaler</title>
   <style>
-    body { background: #000; color: #fff; font-family: sans-serif; text-align: center; }
-    #upload-area { border: 3px dashed #555; padding: 40px; margin: 2rem auto; width: 80%; max-width: 500px; background-color: #111; cursor: pointer; }
-    input[type="file"] { display: none; }
-    #output { margin-top: 2rem; }
-    img { max-width: 90%; margin: 1rem auto; }
-    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; cursor: pointer; }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .upload-container {
+      background-color: #1a1a1a;
+      border: 2px dashed #4fc3f7;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+      position: relative;
+    }
+    .upload-container.dragover {
+      background-color: #2a2a2a;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .upload-label {
+      display: inline-block;
+      margin: 1rem 0;
+      padding: 1rem 2rem;
+      background-color: #4fc3f7;
+      color: #000;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .preview-section {
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 600px;
+      overflow-x: auto;
+      gap: 1rem;
+    }
+    .preview-section img {
+      max-width: 100%;
+      border: 2px solid #4fc3f7;
+      border-radius: 8px;
+    }
+    canvas {
+      position: fixed;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
-  <h1>MoreTranz AI Upscaler</h1>
-  <div id="upload-area">Click or drop an image to upscale</div>
-  <input type="file" id="file-input" accept="image/*">
-  <button id="upload-btn">Upscale Image</button>
-  <div id="output"></div>
+  <h1>MoreTranz Image Upscaler</h1>
+  <div class="upload-container" id="drop-area">
+    <form id="upload-form" action="/upscale" method="POST" enctype="multipart/form-data">
+      <label for="file" class="upload-label">Choose or Drop an Image</label>
+      <input type="file" name="image" id="file" accept="image/*" required />
+    </form>
+    <div id="result" style="margin-top: 2rem;"></div>
+  </div>
+
+  <div class="preview-section" id="preview-section"></div>
+
+  <canvas id="confetti-canvas"></canvas>
+
   <script>
-    const uploadArea = document.getElementById('upload-area');
-    const fileInput = document.getElementById('file-input');
-    const uploadBtn = document.getElementById('upload-btn');
-    const output = document.getElementById('output');
-    let selectedFile = null;
+    const form = document.getElementById('upload-form');
+    const fileInput = document.getElementById('file');
+    const dropArea = document.getElementById('drop-area');
+    const resultDiv = document.getElementById('result');
+    const previewSection = document.getElementById('preview-section');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const ctx = confettiCanvas.getContext('2d');
 
-    uploadArea.addEventListener('click', () => fileInput.click());
-    uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = '#0f0'; });
-    uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = '#555');
-    uploadArea.addEventListener('drop', e => {
-      e.preventDefault(); uploadArea.style.borderColor = '#555';
-      selectedFile = e.dataTransfer.files[0]; uploadArea.textContent = selectedFile.name;
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function launchConfetti() {
+      const confettiCount = 100;
+      const colors = ['#4fc3f7', '#fff', '#81d4fa'];
+      const confetti = Array.from({ length: confettiCount }, () => ({
+        x: Math.random() * confettiCanvas.width,
+        y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * confettiCount,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+
+      function draw() {
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confetti.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        });
+        update();
+      }
+
+      function update() {
+        confetti.forEach(p => {
+          p.y += Math.cos(p.d) + 1 + p.r / 2;
+          p.x += Math.sin(p.d);
+          if (p.y > confettiCanvas.height) {
+            p.y = 0;
+            p.x = Math.random() * confettiCanvas.width;
+          }
+        });
+      }
+
+      setInterval(draw, 20);
+      setTimeout(() => ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height), 5000);
+    }
+
+    fileInput.addEventListener('change', () => handleUpload(fileInput.files[0]));
+
+    dropArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropArea.classList.add('dragover');
     });
 
-    fileInput.addEventListener('change', () => {
-      selectedFile = fileInput.files[0]; uploadArea.textContent = selectedFile.name;
-    });
+    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
 
-    uploadBtn.addEventListener('click', async () => {
-      if (!selectedFile) return alert('Please select or drop an image first.');
-      const formData = new FormData(); formData.append('image_file', selectedFile);
-      output.innerHTML = 'Upscaling... Please wait...';
-      try {
-        const res = await fetch('/upscale', { method: 'POST', body: formData });
-        if (!res.ok) throw new Error('Upscale failed.');
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        output.innerHTML = `<img src="${url}" alt="Upscaled Image">`;
-      } catch (err) {
-        output.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+    dropArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropArea.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        fileInput.files = e.dataTransfer.files;
+        handleUpload(file);
       }
     });
+
+    function handleUpload(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      previewSection.innerHTML = '';
+      const beforeImg = document.createElement('img');
+      beforeImg.src = URL.createObjectURL(file);
+      beforeImg.alt = 'Original Image';
+      previewSection.appendChild(beforeImg);
+
+      resultDiv.innerHTML = 'Processing...';
+
+      fetch('/upscale', {
+        method: 'POST',
+        body: formData
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            const afterImg = document.createElement('img');
+            afterImg.src = result.imageUrl;
+            afterImg.alt = 'Upscaled Image';
+            previewSection.appendChild(afterImg);
+            resultDiv.innerHTML = '<strong>Success!</strong>';
+            launchConfetti();
+          } else {
+            resultDiv.innerHTML = `<p style="color: red;">${result.error}</p>`;
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          resultDiv.innerHTML = '<p style="color: red;">An error occurred. Please try again.</p>';
+        });
+    }
   </script>
 </body>
 </html>
