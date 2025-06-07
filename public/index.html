@@ -34,14 +34,20 @@
       overflow: hidden;
       border: 2px solid #00f0ff;
       border-radius: 6px;
+      height: auto;
     }
     #comparison img {
       width: 100%;
-      display: block;
+      height: auto;
+      display: none;
       position: absolute;
       top: 0;
       left: 0;
       border-radius: 6px;
+    }
+    #afterImage.shown,
+    #beforeImage.shown {
+      display: block;
     }
     #afterImage {
       clip-path: inset(0 50% 0 0);
@@ -91,8 +97,8 @@
   <div class="loader" id="loader" style="display:none;"></div>
 
   <div id="comparison">
-    <img id="beforeImage" src="" alt="Original" style="z-index: 1;">
-    <img id="afterImage" src="" alt="Upscaled" style="z-index: 2;">
+    <img id="beforeImage" src="" alt="Original">
+    <img id="afterImage" src="" alt="Upscaled">
     <div id="slider"></div>
   </div>
   <button id="downloadBtn" style="display:none">Download</button>
@@ -133,6 +139,7 @@
       const reader = new FileReader();
       reader.onload = () => {
         beforeImage.src = reader.result;
+        beforeImage.classList.add('shown');
       };
       reader.readAsDataURL(file);
 
@@ -148,6 +155,7 @@
         loader.style.display = 'none';
         afterImage.src = data.image;
         afterImage.onload = () => {
+          afterImage.classList.add('shown');
           comparison.style.display = 'block';
           initSlider();
         };
