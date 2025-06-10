@@ -23,47 +23,26 @@
       transition: background-color 0.3s;
     }
     #drop-area.dragover {
-      background-color: #222;
+      background-color: #111;
     }
     #comparison {
-      position: relative;
-      width: 90%;
-      max-width: 700px;
-      margin: 2rem auto;
-      overflow: hidden;
-      border: 2px solid #00f0ff;
-      border-radius: 6px;
-      height: auto;
       display: none;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 2rem;
     }
-    #comparison img {
-      width: 100%;
-      height: auto;
-      max-height: 600px;
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
+    .preview-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 45%;
+    }
+    img {
+      max-width: 100%;
+      border: 1px solid #00f0ff;
       border-radius: 6px;
-      object-fit: contain;
-    }
-    #afterImage {
-      clip-path: inset(0 50% 0 0);
-      z-index: 2;
-      display: none;
-    }
-    #beforeImage {
-      z-index: 1;
-    }
-    #slider {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      width: 4px;
-      height: 100%;
-      background: #00f0ff;
-      cursor: ew-resize;
-      z-index: 3;
     }
     .loader {
       border: 6px solid #f3f3f3;
@@ -100,11 +79,16 @@
   <div class="loader" id="loader" style="display:none;"></div>
 
   <div id="comparison">
-    <img id="beforeImage" src="" alt="Original">
-    <img id="afterImage" src="" alt="Upscaled">
-    <div id="slider"></div>
+    <div class="preview-block">
+      <img id="beforeImage" src="" alt="Original"/>
+      <span>Original</span>
+    </div>
+    <div class="preview-block">
+      <img id="afterImage" src="" alt="Upscaled"/>
+      <span>Upscaled</span>
+      <button id="downloadBtn" style="display:none">Download</button>
+    </div>
   </div>
-  <button id="downloadBtn" style="display:none">Download</button>
 
   <script>
     const dropArea = document.getElementById('drop-area');
@@ -114,9 +98,9 @@
     const afterImage = document.getElementById('afterImage');
     const downloadBtn = document.getElementById('downloadBtn');
     const comparison = document.getElementById('comparison');
-    const slider = document.getElementById('slider');
 
     dropArea.addEventListener('click', () => fileInput.click());
+
     dropArea.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropArea.classList.add('dragover');
@@ -128,6 +112,7 @@
       fileInput.files = e.dataTransfer.files;
       uploadAndUpscale();
     });
+
     fileInput.addEventListener('change', uploadAndUpscale);
 
     function uploadAndUpscale() {
@@ -136,12 +121,13 @@
 
       loader.style.display = 'block';
       downloadBtn.style.display = 'none';
-      comparison.style.display = 'block';
-      afterImage.style.display = 'none';
+      afterImage.src = '';
+      comparison.style.display = 'none';
 
       const reader = new FileReader();
       reader.onload = () => {
         beforeImage.src = reader.result;
+        comparison.style.display = 'flex';
       };
       reader.readAsDataURL(file);
 
@@ -156,8 +142,6 @@
       .then(data => {
         loader.style.display = 'none';
         afterImage.src = data.image;
-        afterImage.style.display = 'block';
-        initSlider();
         downloadBtn.style.display = 'inline-block';
         downloadBtn.onclick = () => {
           const link = document.createElement('a');
@@ -171,31 +155,6 @@
         console.error(err);
         alert('Upscale failed.');
       });
-    }
-
-    function initSlider() {
-      let isDragging = false;
-
-      slider.addEventListener('mousedown', () => isDragging = true);
-      document.addEventListener('mouseup', () => isDragging = false);
-      document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        moveSlider(e.clientX);
-      });
-      slider.addEventListener('touchstart', () => isDragging = true);
-      document.addEventListener('touchend', () => isDragging = false);
-      document.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        moveSlider(e.touches[0].clientX);
-      });
-
-      function moveSlider(x) {
-        const rect = comparison.getBoundingClientRect();
-        const offset = Math.max(0, Math.min(x - rect.left, rect.width));
-        const percent = (offset / rect.width) * 100;
-        slider.style.left = percent + '%';
-        afterImage.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
-      }
     }
   </script>
 </body>
