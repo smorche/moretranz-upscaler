@@ -24,7 +24,7 @@
       cursor: pointer;
     }
     #drop-area.dragover {
-      background-color: #222;
+      background-color: #111;
     }
     #comparison {
       display: flex;
@@ -38,15 +38,17 @@
     }
     .image-container {
       width: 45%;
+      max-width: 100%;
+      transition: all 0.3s ease-in-out;
     }
     .image-container img {
       width: 100%;
-      max-width: 100%;
-      max-height: 600px;
       height: auto;
+      max-height: 600px;
       border: 1px solid #00f0ff;
       border-radius: 6px;
       object-fit: contain;
+      transition: all 0.3s ease-in-out;
     }
     .loader {
       border: 6px solid #f3f3f3;
@@ -73,10 +75,17 @@
     #afterImageContainer {
       display: none;
     }
+    .subtitle {
+      color: #fff;
+      font-size: 1rem;
+      margin-top: -1rem;
+      margin-bottom: 2rem;
+    }
   </style>
 </head>
 <body>
   <h1>MoreTranz Image Upscaler</h1>
+  <div class="subtitle">Upload your image and upscale it instantly with AI — optimized for stunning, high-resolution DTF transfers.</div>
 
   <div id="drop-area">
     <p>Drag & Drop Image Here or Click to Select</p>
