@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MoreTranz Image Upscaler</title>
   <style>
     body {
@@ -15,40 +15,17 @@
     }
     #drop-area {
       border: 2px dashed #00f0ff;
+      background-color: #111;
       padding: 2rem;
       margin: 1rem auto;
       width: 90%;
       max-width: 600px;
-      border-radius: 10px;
+      border-radius: 12px;
       transition: background-color 0.3s;
       cursor: pointer;
     }
     #drop-area.dragover {
-      background-color: #111;
-    }
-    #comparison {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2rem;
-      flex-wrap: wrap;
-      width: 100%;
-      margin: 2rem auto;
-      display: none;
-    }
-    .image-container {
-      width: 45%;
-      max-width: 100%;
-      transition: all 0.3s ease-in-out;
-    }
-    .image-container img {
-      width: 100%;
-      height: auto;
-      max-height: 600px;
-      border: 1px solid #00f0ff;
-      border-radius: 6px;
-      object-fit: contain;
-      transition: all 0.3s ease-in-out;
+      background-color: #1e1e2f;
     }
     .loader {
       border: 6px solid #f3f3f3;
@@ -63,17 +40,38 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    button {
-      margin-top: 1rem;
-      padding: 0.5rem 1rem;
-      background-color: #00f0ff;
-      border: none;
-      color: #000;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    #afterImageContainer {
+    #comparison {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2rem;
+      flex-wrap: wrap;
+      width: 100%;
+      margin: 2rem auto;
       display: none;
+    }
+    .image-container {
+      width: 45%;
+    }
+    .image-container img {
+      width: 100%;
+      max-width: 100%;
+      max-height: 600px;
+      height: auto;
+      border: 2px solid #00f0ff;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(to right, #1e90ff, #00bfff);
+      color: white;
+      font-size: 1rem;
     }
     .subtitle {
       color: #fff;
@@ -89,7 +87,7 @@
 
   <div id="drop-area">
     <p>Drag & Drop Image Here or Click to Select</p>
-    <input type="file" id="fileInput" accept="image/*" style="display:none">
+    <input type="file" id="fileInput" accept="image/*" style="display:none" />
   </div>
 
   <div class="loader" id="loader" style="display:none;"></div>
@@ -99,11 +97,12 @@
       <img id="beforeImage" src="" alt="Original">
       <p>Original</p>
     </div>
-    <div class="image-container" id="afterImageContainer">
+    <div class="image-container">
       <img id="afterImage" src="" alt="Upscaled">
       <p>Upscaled</p>
     </div>
   </div>
+
   <button id="downloadBtn" style="display:none">Download</button>
 
   <script>
@@ -114,7 +113,6 @@
     const afterImage = document.getElementById('afterImage');
     const downloadBtn = document.getElementById('downloadBtn');
     const comparison = document.getElementById('comparison');
-    const afterImageContainer = document.getElementById('afterImageContainer');
 
     dropArea.addEventListener('click', () => fileInput.click());
     dropArea.addEventListener('dragover', (e) => {
@@ -137,7 +135,6 @@
       loader.style.display = 'block';
       downloadBtn.style.display = 'none';
       comparison.style.display = 'none';
-      afterImageContainer.style.display = 'none';
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -157,7 +154,6 @@
       .then(data => {
         loader.style.display = 'none';
         afterImage.src = data.image;
-        afterImageContainer.style.display = 'block';
         downloadBtn.style.display = 'inline-block';
         downloadBtn.onclick = () => {
           const link = document.createElement('a');
