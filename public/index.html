@@ -94,11 +94,11 @@
 
   <div id="comparison">
     <div class="image-container">
-      <img id="beforeImage" src="" alt="Original">
+      <img id="beforeImage" src="" alt="Original" style="display:none;">
       <p>Original</p>
     </div>
     <div class="image-container">
-      <img id="afterImage" src="" alt="Upscaled">
+      <img id="afterImage" src="" alt="Upscaled" style="display:none;">
       <p>Upscaled</p>
     </div>
   </div>
@@ -135,10 +135,13 @@
       loader.style.display = 'block';
       downloadBtn.style.display = 'none';
       comparison.style.display = 'none';
+      beforeImage.style.display = 'none';
+      afterImage.style.display = 'none';
 
       const reader = new FileReader();
       reader.onload = () => {
         beforeImage.src = reader.result;
+        beforeImage.style.display = 'block';
         comparison.style.display = 'flex';
       };
       reader.readAsDataURL(file);
@@ -154,6 +157,7 @@
       .then(data => {
         loader.style.display = 'none';
         afterImage.src = data.image;
+        afterImage.style.display = 'block';
         downloadBtn.style.display = 'inline-block';
         downloadBtn.onclick = () => {
           const link = document.createElement('a');
