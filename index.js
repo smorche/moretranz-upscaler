@@ -13,153 +13,201 @@ app.use(cors());
 app.use(express.static('public'));
 
 app.post('/upscale', upload.single('image'), async (req, res) => {
-  try {
-    console.log('📥 Incoming request to /upscale');
 
-    if (!req.file || !req.file.buffer) {
-      return res.status(400).json({ error: 'No image uploaded' });
-    }
+try {
 
-    const printWidth = parseFloat(req.body.printWidth || '8');
+console.log('Incoming request to /upscale');
 
-    if (!printWidth || printWidth <= 0) {
-      return res.status(400).json({ error: 'Invalid print width' });
-    }
+if (!req.file || !req.file.buffer) {
+return res.status(400).json({ error: 'No image uploaded' });
+}
 
-    const inputMeta = await sharp(req.file.buffer).metadata();
+const printWidth = parseFloat(req.body.printWidth || 8);
 
-    if (!inputMeta.width || !inputMeta.height) {
-      return res.status(400).json({ error: 'Could not read uploaded image dimensions' });
-    }
+if (!printWidth || printWidth <= 0) {
+return res.status(400).json({ error: 'Invalid print width' });
+}
 
-    const originalWidth = inputMeta.width;
-    const originalHeight = inputMeta.height;
-    const aspectRatio = originalHeight / originalWidth;
+// Read original image metadata
+const originalMeta = await sharp(req.file.buffer).metadata();
 
-    const requiredWidthPx = Math.round(printWidth * 300);
-    const requiredHeightPx = Math.round(requiredWidthPx * aspectRatio);
+const originalWidth = originalMeta.width;
+const originalHeight = originalMeta.height;
 
-    const originalMaxPrintWidth = originalWidth / 300;
-    const originalMaxPrintHeight = originalHeight / 300;
+if (!originalWidth || !originalHeight) {
+return res.status(400).json({ error: 'Unable to read uploaded image dimensions' });
+}
 
-    let scale = 2;
-    const neededScale = requiredWidthPx / originalWidth;
+// Original print size at 300 DPI
+const originalPrintWidth = originalWidth / 300;
+const originalPrintHeight = originalHeight / 300;
 
-    if (neededScale > 2) {
-      scale = 4;
-    }
+// Maintain aspect ratio
+const aspectRatio = originalHeight / originalWidth;
 
-    const maxPrintWidthAt4x = (originalWidth * 4) / 300;
-    const maxPrintHeightAt4x = (originalHeight * 4) / 300;
+const requestedPrintHeight = printWidth * aspectRatio;
 
-    console.log('✅ Upload metadata:', {
-      originalWidth,
-      originalHeight,
-      printWidth,
-      requiredWidthPx,
-      neededScale,
-      selectedScale: scale
-    });
+// Required pixels for requested print size
+const requiredWidthPx = Math.round(printWidth * 300);
+const requiredHeightPx = Math.round(requestedPrintHeight * 300);
 
-    const form = new FormData();
-    form.append('image', req.file.buffer, {
-      filename: req.file.originalname || 'upload.png',
-      contentType: req.file.mimetype || 'image/png'
-    });
-    form.append('scale', String(scale));
+// Determine upscale factor
+const rawScale = requiredWidthPx / originalWidth;
 
-    console.log(`📤 Sending to PixelCut with ${scale}x upscale...`);
+let scale;
 
-    const pixelcutResponse = await axios.post(
-      'https://api.developer.pixelcut.ai/v1/upscale',
-      form,
-      {
-        headers: {
-          ...form.getHeaders(),
-          'X-API-KEY': process.env.PIXELCUT_API_KEY,
-          Accept: 'image/*'
-        },
-        responseType: 'arraybuffer',
-        timeout: 120000,
-        maxBodyLength: Infinity,
-        maxContentLength: Infinity,
-        validateStatus: (status) => status >= 200 && status < 500
-      }
-    );
+if (rawScale <= 1) scale = 1;
+else if (rawScale <= 2) scale = 2;
+else scale = 4;
 
-    if (pixelcutResponse.status >= 400) {
-      const errorText = Buffer.from(pixelcutResponse.data).toString('utf8');
-      console.error('❌ PixelCut error:', errorText);
+console.log("Upscale factor:", scale);
 
-      return res.status(pixelcutResponse.status).json({
-        error: 'PixelCut request failed',
-        details: errorText
-      });
-    }
+let processedInputBuffer;
 
-    const pixelcutBuffer = Buffer.from(pixelcutResponse.data);
-    const processedMeta = await sharp(pixelcutBuffer).metadata();
+// Skip PixelCut if upscale not needed
+if (scale === 1) {
 
-    if (!processedMeta.width || !processedMeta.height) {
-      return res.status(500).json({ error: 'Could not read processed image dimensions' });
-    }
+processedInputBuffer = req.file.buffer;
 
-    const processedWidth = processedMeta.width;
-    const processedHeight = processedMeta.height;
+} else {
 
-    const processedMaxPrintWidth = processedWidth / 300;
-    const processedMaxPrintHeight = processedHeight / 300;
+const form = new FormData();
 
-    let message = `Your artwork has been enhanced and prepared as a 300 DPI PNG.`;
+form.append('image', req.file.buffer, {
+filename: req.file.originalname || 'upload.png',
+contentType: req.file.mimetype || 'image/png'
+});
 
-    if (processedWidth < requiredWidthPx) {
-      message = `Your file is still smaller than ideal for ${printWidth}" wide at 300 DPI. Maximum recommended width is ${processedMaxPrintWidth.toFixed(2)}".`;
-    }
+form.append('scale', scale.toString());
 
-    const outputBuffer = await sharp(pixelcutBuffer)
-      .rotate()
-      .withMetadata({ density: 300 })
-      .png()
-      .toBuffer();
+const pixelcutResponse = await axios.post(
 
-    const base64 = outputBuffer.toString('base64');
+'https://api.developer.pixelcut.ai/v1/upscale
+',
 
-    return res.json({
-      image: `data:image/png;base64,${base64}`,
-      analysis: {
-        message,
-        originalWidth,
-        originalHeight,
-        originalMaxPrintWidth: originalMaxPrintWidth.toFixed(2),
-        originalMaxPrintHeight: originalMaxPrintHeight.toFixed(2),
-        selectedScale: `${scale}x`,
-        processedWidth,
-        processedHeight,
-        processedMaxPrintWidth: processedMaxPrintWidth.toFixed(2),
-        processedMaxPrintHeight: processedMaxPrintHeight.toFixed(2),
-        requestedPrintWidth: printWidth.toFixed(2),
-        requestedPrintHeight: (printWidth * aspectRatio).toFixed(2),
-        requiredWidthPx,
-        requiredHeightPx
-      }
-    });
-  } catch (error) {
-    const details = error.response?.data
-      ? Buffer.isBuffer(error.response.data)
-        ? error.response.data.toString('utf8')
-        : error.response.data
-      : error.message;
+form,
 
-    console.error('❌ Upscale error:', details);
+{
 
-    return res.status(500).json({
-      error: 'Upscale failed',
-      details
-    });
-  }
+headers: {
+
+...form.getHeaders(),
+
+'X-API-KEY': process.env.PIXELCUT_API_KEY,
+
+Accept: 'image/*'
+
+},
+
+responseType: 'arraybuffer',
+
+timeout: 120000
+
+}
+
+);
+
+if (pixelcutResponse.status >= 400) {
+
+const errorText = Buffer.from(pixelcutResponse.data).toString('utf8');
+
+return res.status(pixelcutResponse.status).json({
+
+error: 'PixelCut request failed',
+
+details: errorText
+
+});
+
+}
+
+processedInputBuffer = Buffer.from(pixelcutResponse.data);
+
+}
+
+// Convert to PNG with 300 DPI metadata
+const outputBuffer = await sharp(processedInputBuffer)
+
+.rotate()
+
+.withMetadata({ density: 300 })
+
+.png()
+
+.toBuffer();
+
+// Read processed image metadata
+const processedMeta = await sharp(outputBuffer).metadata();
+
+const processedWidth = processedMeta.width;
+const processedHeight = processedMeta.height;
+
+// Max printable size
+const maxPrintWidth = processedWidth / 300;
+const maxPrintHeight = processedHeight / 300;
+
+const analysis = {
+
+originalWidth,
+
+originalHeight,
+
+originalPrintWidth: originalPrintWidth.toFixed(2),
+
+originalPrintHeight: originalPrintHeight.toFixed(2),
+
+processedWidth,
+
+processedHeight,
+
+maxPrintWidth: maxPrintWidth.toFixed(2),
+
+maxPrintHeight: maxPrintHeight.toFixed(2),
+
+requestedPrintWidth: printWidth.toFixed(2),
+
+requestedPrintHeight: requestedPrintHeight.toFixed(2),
+
+requiredWidthPx,
+
+requiredHeightPx,
+
+scaleApplied: scale
+
+};
+
+const base64 = outputBuffer.toString('base64');
+
+res.json({
+
+image: data:image/png;base64,${base64},
+
+analysis
+
+});
+
+}
+
+catch (error) {
+
+console.error('Upscale error:', error.message);
+
+res.status(500).json({
+
+error: 'Upscale failed',
+
+details: error.message
+
+});
+
+}
+
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`✅ MoreTranz Upscaler running on port ${PORT}`);
+
+console.log(MoreTranz Upscaler running on port ${PORT});
+
 });
