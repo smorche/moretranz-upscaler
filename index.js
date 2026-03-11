@@ -5,6 +5,8 @@ const axios = require('axios');
 const FormData = require('form-data');
 const sharp = require('sharp');
 require('dotenv').config();
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
