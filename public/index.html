@@ -12,8 +12,8 @@
 
     body {
       margin: 0;
-      background: #000 !important;
-      color: #111;
+      background: #000000;
+      color: #111111;
       font-family: Arial, Helvetica, sans-serif;
     }
 
@@ -24,7 +24,7 @@
     }
 
     .card {
-      background: #fff;
+      background: #ffffff;
       border-radius: 16px;
       padding: 28px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
@@ -36,13 +36,13 @@
     }
 
     .hero-copy {
-      color: #555;
+      color: #555555;
       margin-bottom: 24px;
       line-height: 1.5;
     }
 
     .support-text {
-      color: #666;
+      color: #666666;
       font-size: 14px;
       line-height: 1.5;
     }
@@ -72,7 +72,7 @@
 
     .drop-zone p {
       margin: 8px 0;
-      color: #444;
+      color: #444444;
     }
 
     .preview-box {
@@ -121,7 +121,7 @@
 
     .primary-btn {
       background: #0d1b52;
-      color: #fff;
+      color: #ffffff;
     }
 
     .primary-btn:hover {
@@ -130,7 +130,7 @@
 
     .secondary-btn {
       background: #f1f1f1;
-      color: #222;
+      color: #222222;
     }
 
     .secondary-btn:hover {
@@ -139,7 +139,7 @@
 
     .file-btn {
       background: #0d1b52;
-      color: #fff;
+      color: #ffffff;
       margin-top: 6px;
     }
 
@@ -216,12 +216,12 @@
       margin-top: 12px;
       font-size: 14px;
       line-height: 1.5;
-      color: #666;
+      color: #666666;
     }
 
     .next-step-card {
       text-align: center;
-      background: #fff;
+      background: #ffffff;
       border-radius: 16px;
       padding: 28px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
@@ -233,7 +233,7 @@
     }
 
     .small-meta {
-      color: #555;
+      color: #555555;
       font-size: 14px;
       line-height: 1.5;
     }
@@ -259,10 +259,7 @@
         and generate a print-ready 300 DPI PNG.
       </p>
 
-      <div
-        id="dropZone"
-        class="drop-zone"
-      >
+      <div id="dropZone" class="drop-zone">
         <p><strong>Drag &amp; drop your artwork here</strong></p>
         <p>or</p>
         <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/webp" hidden />
@@ -395,8 +392,6 @@
     const recommendedWidthSummary = document.getElementById('recommendedWidthSummary');
 
     let selectedFile = null;
-    let originalImageWidth = 0;
-    let originalImageHeight = 0;
 
     chooseFileBtn.addEventListener('click', () => fileInput.click());
 
@@ -441,16 +436,13 @@
 
         const img = new Image();
         img.onload = function() {
-          originalImageWidth = img.width;
-          originalImageHeight = img.height;
-
-          originalMeta.textContent = `Original image: ${img.width} × ${img.height} px`;
+          originalMeta.textContent = 'Original image: ' + img.width + ' × ' + img.height + ' px';
 
           const originalMax = (img.width / 300).toFixed(2);
           const enhancedMax = ((img.width * 4) / 300).toFixed(2);
 
-          originalMaxWidth.textContent = `${originalMax}" wide`;
-          enhancedMaxWidth.textContent = `${enhancedMax}" wide`;
+          originalMaxWidth.textContent = originalMax + '" wide';
+          enhancedMaxWidth.textContent = enhancedMax + '" wide';
 
           precheckSummary.classList.remove('hidden');
         };
@@ -463,9 +455,6 @@
 
     function resetTool() {
       selectedFile = null;
-      originalImageWidth = 0;
-      originalImageHeight = 0;
-
       fileInput.value = '';
       originalPreview.src = '';
       enhancedPreview.src = '';
@@ -473,7 +462,6 @@
       compareEnhanced.src = '';
       downloadLink.href = '#';
       analysis.innerHTML = '';
-
       originalPreviewWrap.classList.add('hidden');
       precheckSummary.classList.add('hidden');
       resultsSection.classList.add('hidden');
@@ -517,8 +505,8 @@
         const requestedWidth = Number(data.analysis?.requestedPrintWidth || 0).toFixed(2);
         const recommendedWidth = Number(data.analysis?.maxPrintWidth || 0).toFixed(2);
 
-        requestedWidthSummary.textContent = `${requestedWidth}"`;
-        recommendedWidthSummary.textContent = `${recommendedWidth}"`;
+        requestedWidthSummary.textContent = requestedWidth + '"';
+        recommendedWidthSummary.textContent = recommendedWidth + '"';
 
         setQualityBadge(data.analysis);
 
@@ -555,12 +543,12 @@
 
       if (maxWidth >= requested * 0.75) {
         qualityBadge.classList.add('quality-warn');
-        qualityBadge.textContent = `⚠ Enhanced: quality improved, but the best recommended width is ${maxWidth.toFixed(2)}".`;
+        qualityBadge.textContent = '⚠ Enhanced: quality improved, but the best recommended width is ' + maxWidth.toFixed(2) + '".';
         return;
       }
 
       qualityBadge.classList.add('quality-bad');
-      qualityBadge.textContent = `❌ Low resolution for the requested size: maximum recommended width is ${maxWidth.toFixed(2)}".`;
+      qualityBadge.textContent = '❌ Low resolution for the requested size: maximum recommended width is ' + maxWidth.toFixed(2) + '".';
     }
   </script>
 </body>
