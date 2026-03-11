@@ -5,8 +5,6 @@ const axios = require('axios');
 const FormData = require('form-data');
 const sharp = require('sharp');
 require('dotenv').config();
-const path = require('path');
-require('dotenv').config();
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -36,9 +34,8 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       contentType: req.file.mimetype || 'image/png'
     });
 
-    // PixelCut requires scale parameter
-    form.append('scale', '2')
-    
+    form.append('scale', '2');
+
     console.log('📤 Sending to PixelCut...');
 
     const pixelcutResponse = await axios.post(
@@ -47,37 +44,55 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       {
         headers: {
           ...form.getHeaders(),
-          'X-API-KEY': process.env.PIXELCUT_API_KEY
-        }
+          'X-API-KEY': process.env.PIXELCUT_API_KEY,
+          'Accept': 'image/*'
+        },
+        responseType: 'arraybuffer',
+        timeout: 120000,
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        validateStatus: (status) => status >= 200 && status < 500
       }
     );
 
-    const resultUrl = pixelcutResponse.data?.result_url || pixelcutResponse.data?.result?.image_url;
-    if (!resultUrl) {
-      console.error('❌ PixelCut returned unexpected response:', pixelcutResponse.data);
-      return res.status(500).json({ error: 'PixelCut response format unexpected' });
+    console.log('📦 PixelCut status:', pixelcutResponse.status);
+    console.log('📦 PixelCut content-type:', pixelcutResponse.headers['content-type']);
+
+    if (pixelcutResponse.status >= 400) {
+      const errorText = Buffer.from(pixelcutResponse.data).toString('utf8');
+      console.error('❌ PixelCut error response:', errorText);
+      return res.status(pixelcutResponse.status).json({
+        error: 'PixelCut request failed',
+        details: errorText
+      });
     }
 
-    console.log('✅ PixelCut result URL:', resultUrl);
-
-    const imageResponse = await axios.get(resultUrl, {
-      responseType: 'arraybuffer'
-    });
-
-    // Important: withMetadata must come before png()
-    const outputBuffer = await sharp(Buffer.from(imageResponse.data))
+    const outputBuffer = await sharp(Buffer.from(pixelcutResponse.data))
+      .rotate()
       .withMetadata({ density: 300 })
       .png()
       .toBuffer();
 
     const base64 = outputBuffer.toString('base64');
 
-    res.json({
+    return res.json({
       image: `data:image/png;base64,${base64}`
     });
   } catch (error) {
-    console.error('❌ Upscale error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Upscale failed' });
+    console.error('❌ Upscale error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+        ? Buffer.isBuffer(error.response.data)
+          ? error.response.data.toString('utf8')
+          : error.response.data
+        : null
+    });
+
+    return res.status(500).json({
+      error: 'Upscale failed',
+      details: error.message
+    });
   }
 });
 
