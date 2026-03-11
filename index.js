@@ -1,56 +1,82 @@
-// index.js — MoreTranz Pixelcut Image Upscaler (Fixed 'scale' parameter)
-
 const express = require('express');
+const cors = require('cors');
 const multer = require('multer');
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 const FormData = require('form-data');
-const dotenv = require('dotenv');
-dotenv.config();
+const sharp = require('sharp');
+require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const upload = multer({ storage: multer.memoryStorage() });
 
+app.use(cors());
 app.use(express.static('public'));
-
-// Multer setup
-const upload = multer({ dest: 'uploads/' });
 
 app.post('/upscale', upload.single('image'), async (req, res) => {
   try {
-    const imagePath = req.file.path;
-    const fileStream = fs.createReadStream(imagePath);
+    console.log('📥 Incoming request to /upscale');
+    console.log('File received:', !!req.file);
 
-    const form = new FormData();
-    form.append('image', fileStream);
-    form.append('scale', '2'); // ensure scale is included as string
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ error: 'No image uploaded' });
+    }
 
-    const response = await axios.post('https://api.developer.pixelcut.ai/v1/upscale', form, {
-      headers: {
-        ...form.getHeaders(),
-        'x-api-key': process.env.PIXELCUT_API_KEY,
-      },
-      responseType: 'arraybuffer',
+    console.log('✅ File details:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      fieldname: req.file.fieldname
     });
 
-    fs.unlinkSync(imagePath); // Clean up temp file
+    const form = new FormData();
+    form.append('image', req.file.buffer, {
+      filename: req.file.originalname || 'upload.png',
+      contentType: req.file.mimetype || 'image/png'
+    });
 
-    const base64Image = Buffer.from(response.data).toString('base64');
-    res.json({ image: `data:image/png;base64,${base64Image}` });
+    console.log('📤 Sending to PixelCut...');
 
-  } catch (err) {
-    const errorMessage = err.response?.data || err.message;
-    console.error('Upscale error:', errorMessage);
-    res.status(500).json({ error: 'Upscaling failed.', details: errorMessage });
+    const pixelcutResponse = await axios.post(
+      'https://api.developer.pixelcut.ai/v1/upscale',
+      form,
+      {
+        headers: {
+          ...form.getHeaders(),
+          'X-API-KEY': process.env.PIXELCUT_API_KEY
+        }
+      }
+    );
+
+    const resultUrl = pixelcutResponse.data?.result_url;
+    if (!resultUrl) {
+      console.error('❌ PixelCut returned unexpected response:', pixelcutResponse.data);
+      return res.status(500).json({ error: 'PixelCut did not return result_url' });
+    }
+
+    console.log('✅ PixelCut result URL:', resultUrl);
+
+    const imageResponse = await axios.get(resultUrl, {
+      responseType: 'arraybuffer'
+    });
+
+    // Important: withMetadata must come before png()
+    const outputBuffer = await sharp(Buffer.from(imageResponse.data))
+      .withMetadata({ density: 300 })
+      .png()
+      .toBuffer();
+
+    const base64 = outputBuffer.toString('base64');
+
+    res.json({
+      image: `data:image/png;base64,${base64}`
+    });
+  } catch (error) {
+    console.error('❌ Upscale error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Upscale failed' });
   }
 });
 
-// fallback route
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ MoreTranz Upscaler running on port ${PORT}`);
 });
