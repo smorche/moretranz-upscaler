@@ -11,73 +11,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors());
 app.use(express.static('public'));
-app.use(express.json());
-
-const TARGET_DPI = 300;
-const PIXELCUT_URL = 'https://api.developer.pixelcut.ai/v1/upscale';
-
-function roundTo(value, decimals = 2) {
-  return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
-}
-
-function getPrintWidthFromPixels(pixelWidth, dpi = TARGET_DPI) {
-  return pixelWidth / dpi;
-}
-
-function determineUpscaleOption(originalWidthPx, desiredPrintWidthInches) {
-  const requiredWidthPx = Math.ceil(desiredPrintWidthInches * TARGET_DPI);
-
-  if (originalWidthPx >= requiredWidthPx) {
-    return {
-      selectedScale: 1,
-      requiredWidthPx,
-      reason: 'Original image already meets target print width at 300 DPI'
-    };
-  }
-
-  if (originalWidthPx * 2 >= requiredWidthPx) {
-    return {
-      selectedScale: 2,
-      requiredWidthPx,
-      reason: '2x upscale is sufficient for target print width at 300 DPI'
-    };
-  }
-
-  return {
-    selectedScale: 4,
-    requiredWidthPx,
-    reason: '4x upscale selected because 2x is not sufficient'
-  };
-}
-
-async function callPixelCutUpscale(buffer, originalname, mimetype, scale) {
-  const form = new FormData();
-  form.append('image', buffer, {
-    filename: originalname || 'upload.png',
-    contentType: mimetype || 'image/png'
-  });
-  form.append('scale', String(scale));
-
-  const response = await axios.post(PIXELCUT_URL, form, {
-    headers: {
-      ...form.getHeaders(),
-      'X-API-KEY': process.env.PIXELCUT_API_KEY,
-      'Accept': 'image/*'
-    },
-    responseType: 'arraybuffer',
-    timeout: 120000,
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-    validateStatus: (status) => status >= 200 && status < 500
-  });
-
-  if (response.status >= 400) {
-    const errorText = Buffer.from(response.data).toString('utf8');
-    throw new Error(`PixelCut request failed (${response.status}): ${errorText}`);
-  }
-
-  return Buffer.from(response.data);
-}
 
 app.post('/upscale', upload.single('image'), async (req, res) => {
   try {
@@ -87,78 +20,106 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image uploaded' });
     }
 
-    const desiredPrintWidth = parseFloat(req.body.printWidth);
-    if (!desiredPrintWidth || desiredPrintWidth <= 0) {
-      return res.status(400).json({ error: 'A valid print width in inches is required' });
-    }
+    const printWidth = parseFloat(req.body.printWidth || '8');
 
-    console.log('✅ File details:', {
-      originalname: req.file.originalname,
-      mimetype: req.file.mimetype,
-      size: req.file.size
-    });
+    if (!printWidth || printWidth <= 0) {
+      return res.status(400).json({ error: 'Invalid print width' });
+    }
 
     const inputMeta = await sharp(req.file.buffer).metadata();
 
     if (!inputMeta.width || !inputMeta.height) {
-      return res.status(400).json({ error: 'Unable to read uploaded image dimensions' });
+      return res.status(400).json({ error: 'Could not read uploaded image dimensions' });
     }
 
-    const originalWidthPx = inputMeta.width;
-    const originalHeightPx = inputMeta.height;
-    const originalAspectRatio = originalWidthPx / originalHeightPx;
+    const originalWidth = inputMeta.width;
+    const originalHeight = inputMeta.height;
+    const aspectRatio = originalHeight / originalWidth;
 
-    const originalMaxPrintWidth = getPrintWidthFromPixels(originalWidthPx);
-    const originalMaxPrintHeight = getPrintWidthFromPixels(originalHeightPx);
+    const requiredWidthPx = Math.round(printWidth * 300);
+    const requiredHeightPx = Math.round(requiredWidthPx * aspectRatio);
 
-    const upscaleDecision = determineUpscaleOption(originalWidthPx, desiredPrintWidth);
-    const { selectedScale, requiredWidthPx, reason } = upscaleDecision;
+    const originalMaxPrintWidth = originalWidth / 300;
+    const originalMaxPrintHeight = originalHeight / 300;
 
-    console.log('📐 Print analysis:', {
-      desiredPrintWidth,
+    let scale = 2;
+    const neededScale = requiredWidthPx / originalWidth;
+
+    if (neededScale > 2) {
+      scale = 4;
+    }
+
+    const maxPrintWidthAt4x = (originalWidth * 4) / 300;
+    const maxPrintHeightAt4x = (originalHeight * 4) / 300;
+
+    console.log('✅ Upload metadata:', {
+      originalWidth,
+      originalHeight,
+      printWidth,
       requiredWidthPx,
-      originalWidthPx,
-      selectedScale,
-      reason
+      neededScale,
+      selectedScale: scale
     });
 
-    let workingBuffer = req.file.buffer;
-    let upscaleApplied = false;
+    const form = new FormData();
+    form.append('image', req.file.buffer, {
+      filename: req.file.originalname || 'upload.png',
+      contentType: req.file.mimetype || 'image/png'
+    });
+    form.append('scale', String(scale));
 
-    if (selectedScale > 1) {
-      console.log(`📤 Sending to PixelCut with scale ${selectedScale}x...`);
-      workingBuffer = await callPixelCutUpscale(
-        req.file.buffer,
-        req.file.originalname,
-        req.file.mimetype,
-        selectedScale
-      );
-      upscaleApplied = true;
-    } else {
-      console.log('ℹ️ No PixelCut upscale needed');
+    console.log(`📤 Sending to PixelCut with ${scale}x upscale...`);
+
+    const pixelcutResponse = await axios.post(
+      'https://api.developer.pixelcut.ai/v1/upscale',
+      form,
+      {
+        headers: {
+          ...form.getHeaders(),
+          'X-API-KEY': process.env.PIXELCUT_API_KEY,
+          Accept: 'image/*'
+        },
+        responseType: 'arraybuffer',
+        timeout: 120000,
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        validateStatus: (status) => status >= 200 && status < 500
+      }
+    );
+
+    if (pixelcutResponse.status >= 400) {
+      const errorText = Buffer.from(pixelcutResponse.data).toString('utf8');
+      console.error('❌ PixelCut error:', errorText);
+
+      return res.status(pixelcutResponse.status).json({
+        error: 'PixelCut request failed',
+        details: errorText
+      });
     }
 
-    const processedMeta = await sharp(workingBuffer).metadata();
+    const pixelcutBuffer = Buffer.from(pixelcutResponse.data);
+    const processedMeta = await sharp(pixelcutBuffer).metadata();
 
     if (!processedMeta.width || !processedMeta.height) {
-      return res.status(500).json({ error: 'Unable to read processed image dimensions' });
+      return res.status(500).json({ error: 'Could not read processed image dimensions' });
     }
 
-    const finalWidthPx = processedMeta.width;
-    const finalHeightPx = processedMeta.height;
+    const processedWidth = processedMeta.width;
+    const processedHeight = processedMeta.height;
 
-    const maxPrintWidthAt300 = getPrintWidthFromPixels(finalWidthPx);
-    const maxPrintHeightAt300 = getPrintWidthFromPixels(finalHeightPx);
+    const processedMaxPrintWidth = processedWidth / 300;
+    const processedMaxPrintHeight = processedHeight / 300;
 
-    const meetsTarget = finalWidthPx >= requiredWidthPx;
+    let message = `Your artwork has been enhanced and prepared as a 300 DPI PNG.`;
 
-    const targetHeightPx = Math.round(requiredWidthPx / originalAspectRatio);
-    const recommendedPrintHeight = roundTo(desiredPrintWidth / originalAspectRatio, 2);
+    if (processedWidth < requiredWidthPx) {
+      message = `Your file is still smaller than ideal for ${printWidth}" wide at 300 DPI. Maximum recommended width is ${processedMaxPrintWidth.toFixed(2)}".`;
+    }
 
-    const outputBuffer = await sharp(workingBuffer)
+    const outputBuffer = await sharp(pixelcutBuffer)
       .rotate()
+      .withMetadata({ density: 300 })
       .png()
-      .withMetadata({ density: TARGET_DPI })
       .toBuffer();
 
     const base64 = outputBuffer.toString('base64');
@@ -166,40 +127,34 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     return res.json({
       image: `data:image/png;base64,${base64}`,
       analysis: {
-        targetDpi: TARGET_DPI,
-        desiredPrintWidthInches: desiredPrintWidth,
-        recommendedPrintHeightInches: recommendedPrintHeight,
+        message,
+        originalWidth,
+        originalHeight,
+        originalMaxPrintWidth: originalMaxPrintWidth.toFixed(2),
+        originalMaxPrintHeight: originalMaxPrintHeight.toFixed(2),
+        selectedScale: `${scale}x`,
+        processedWidth,
+        processedHeight,
+        processedMaxPrintWidth: processedMaxPrintWidth.toFixed(2),
+        processedMaxPrintHeight: processedMaxPrintHeight.toFixed(2),
+        requestedPrintWidth: printWidth.toFixed(2),
+        requestedPrintHeight: (printWidth * aspectRatio).toFixed(2),
         requiredWidthPx,
-        targetHeightPx,
-        original: {
-          widthPx: originalWidthPx,
-          heightPx: originalHeightPx,
-          maxPrintWidthAt300Dpi: roundTo(originalMaxPrintWidth),
-          maxPrintHeightAt300Dpi: roundTo(originalMaxPrintHeight)
-        },
-        processing: {
-          upscaleApplied,
-          selectedScale,
-          reason
-        },
-        result: {
-          widthPx: finalWidthPx,
-          heightPx: finalHeightPx,
-          maxPrintWidthAt300Dpi: roundTo(maxPrintWidthAt300),
-          maxPrintHeightAt300Dpi: roundTo(maxPrintHeightAt300),
-          meetsRequestedPrintWidth: meetsTarget
-        },
-        message: meetsTarget
-          ? `Your file is suitable for printing at ${desiredPrintWidth}" wide at 300 DPI.`
-          : `Your file is still smaller than ideal for ${desiredPrintWidth}" wide at 300 DPI. Maximum recommended width is ${roundTo(maxPrintWidthAt300)}".`
+        requiredHeightPx
       }
     });
   } catch (error) {
-    console.error('❌ Upscale error:', error.message);
+    const details = error.response?.data
+      ? Buffer.isBuffer(error.response.data)
+        ? error.response.data.toString('utf8')
+        : error.response.data
+      : error.message;
+
+    console.error('❌ Upscale error:', details);
 
     return res.status(500).json({
       error: 'Upscale failed',
-      details: error.message
+      details
     });
   }
 });
