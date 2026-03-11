@@ -3,197 +3,228 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MoreTranz Image Upscaler</title>
+  <title>MoreTranz Artwork Enhancer</title>
   <style>
     body {
-      background-color: #000;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 2rem;
+      font-family: Arial, sans-serif;
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 20px;
+      color: #222;
     }
-    #drop-area {
-      border: 2px dashed #00f0ff;
-      background-color: #111;
-      padding: 2rem;
-      margin: 1rem auto;
-      width: 90%;
-      max-width: 600px;
-      border-radius: 12px;
-      transition: background-color 0.3s;
-      cursor: pointer;
+
+    h1 {
+      margin-bottom: 10px;
     }
-    #drop-area.dragover {
-      background-color: #1e1e2f;
-    }
-    .loader {
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #00f0ff;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 1rem auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    #comparison {
-      display: none;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 2rem;
-      flex-wrap: wrap;
-      width: 100%;
-      margin: 2rem auto;
-    }
-    .image-container {
-      width: 45%;
-    }
-    .image-container img {
-      width: 100%;
-      max-width: 100%;
-      max-height: 600px;
-      height: auto;
-      border: 2px solid #00f0ff;
+
+    .card {
+      border: 1px solid #ddd;
       border-radius: 10px;
-      object-fit: contain;
+      padding: 20px;
+      margin-bottom: 24px;
+      background: #fff;
     }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    input[type="file"],
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
     button {
-      margin-top: 1.5rem;
-      padding: 0.75rem 2rem;
-      border: none;
-      border-radius: 50px;
-      font-weight: bold;
+      margin-top: 18px;
+      padding: 12px 18px;
+      font-size: 16px;
       cursor: pointer;
-      background: linear-gradient(to right, #1e90ff, #00bfff);
-      color: white;
-      font-size: 1rem;
-    }
-    .subtitle {
+      border: 0;
+      border-radius: 8px;
+      background: #111;
       color: #fff;
-      font-size: 1rem;
-      margin-top: -1rem;
-      margin-bottom: 2rem;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .muted {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 16px;
+      font-weight: 600;
+    }
+
+    .good {
+      color: #0a7a2f;
+    }
+
+    .warn {
+      color: #b26b00;
+    }
+
+    .error {
+      color: #b00020;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .result-image {
+      max-width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .details p {
+      margin: 8px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>MoreTranz Image Upscaler</h1>
-  <div class="subtitle">Upload your image and upscale it instantly with AI — optimized for stunning, high-resolution DTF transfers.</div>
+  <h1>MoreTranz Artwork Enhancer</h1>
+  <p class="muted">
+    Upload your artwork, enter your desired print width, and we’ll enhance it for the best possible 300 DPI print result.
+  </p>
 
-  <div id="drop-area">
-    <p>Drag & Drop Image Here or Click to Select</p>
-    <input type="file" id="fileInput" accept="image/*" style="display:none" />
+  <div class="card">
+    <form id="uploadForm">
+      <label for="image">Upload Artwork</label>
+      <input id="image" type="file" name="image" accept="image/*" required />
+
+      <label for="printWidth">Desired Print Width (inches)</label>
+      <input id="printWidth" type="number" name="printWidth" step="0.1" min="0.5" value="10" required />
+
+      <button id="submitBtn" type="submit">Generate Print-Ready File</button>
+    </form>
+
+    <div id="status" class="status"></div>
   </div>
 
-  <div class="loader" id="loader" style="display:none;"></div>
+  <div id="resultsCard" class="card hidden">
+    <div class="grid">
+      <div>
+        <h2>Enhanced File</h2>
+        <img id="resultImage" class="result-image" alt="Enhanced result" />
+        <p>
+          <a id="downloadLink" download="moretranz-300dpi.png">Download 300 DPI PNG</a>
+        </p>
+      </div>
 
-  <div id="comparison">
-    <div class="image-container">
-      <img id="beforeImage" src="" alt="Original" style="display:none;">
-      <p>Original</p>
-    </div>
-    <div class="image-container">
-      <img id="afterImage" src="" alt="Upscaled" style="display:none;">
-      <p>Upscaled</p>
+      <div class="details">
+        <h2>Print Analysis</h2>
+        <p id="message"></p>
+        <p id="originalSize"></p>
+        <p id="originalPrint"></p>
+        <p id="processing"></p>
+        <p id="resultSize"></p>
+        <p id="resultPrint"></p>
+        <p id="requestedSize"></p>
+      </div>
     </div>
   </div>
-
-  <button id="downloadBtn" style="display:none">Download</button>
 
   <script>
-    const dropArea = document.getElementById('drop-area');
-    const fileInput = document.getElementById('fileInput');
-    const loader = document.getElementById('loader');
-    const beforeImage = document.getElementById('beforeImage');
-    const afterImage = document.getElementById('afterImage');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const comparison = document.getElementById('comparison');
+    const form = document.getElementById('uploadForm');
+    const statusEl = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+    const resultsCard = document.getElementById('resultsCard');
+    const resultImage = document.getElementById('resultImage');
+    const downloadLink = document.getElementById('downloadLink');
 
-    dropArea.addEventListener('click', () => fileInput.click());
+    const messageEl = document.getElementById('message');
+    const originalSizeEl = document.getElementById('originalSize');
+    const originalPrintEl = document.getElementById('originalPrint');
+    const processingEl = document.getElementById('processing');
+    const resultSizeEl = document.getElementById('resultSize');
+    const resultPrintEl = document.getElementById('resultPrint');
+    const requestedSizeEl = document.getElementById('requestedSize');
 
-    dropArea.addEventListener('dragover', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      dropArea.classList.add('dragover');
-    });
 
-    dropArea.addEventListener('dragleave', () => {
-      dropArea.classList.remove('dragover');
-    });
+      statusEl.className = 'status';
+      statusEl.textContent = 'Processing artwork...';
+      resultsCard.classList.add('hidden');
+      submitBtn.disabled = true;
 
-    dropArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropArea.classList.remove('dragover');
-      fileInput.files = e.dataTransfer.files;
-      uploadAndUpscale();
-    });
+      try {
+        const formData = new FormData(form);
 
-    fileInput.addEventListener('change', uploadAndUpscale);
+        const response = await fetch('/upscale', {
+          method: 'POST',
+          body: formData
+        });
 
-    function uploadAndUpscale() {
-      const file = fileInput.files[0];
-      if (!file) {
-        alert('Please choose or drop an image');
-        return;
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.details || data.error || 'Request failed');
+        }
+
+        const analysis = data.analysis;
+
+        resultImage.src = data.image;
+        downloadLink.href = data.image;
+
+        messageEl.textContent = analysis.message;
+        messageEl.className = analysis.result.meetsRequestedPrintWidth ? 'good' : 'warn';
+
+        originalSizeEl.textContent =
+          `Uploaded image: ${analysis.original.widthPx} × ${analysis.original.heightPx} px`;
+
+        originalPrintEl.textContent =
+          `Original max print size at 300 DPI: ${analysis.original.maxPrintWidthAt300Dpi}" × ${analysis.original.maxPrintHeightAt300Dpi}"`;
+
+        processingEl.textContent =
+          analysis.processing.upscaleApplied
+            ? `Enhancement applied: ${analysis.processing.selectedScale}x upscale`
+            : 'Enhancement applied: none needed';
+
+        resultSizeEl.textContent =
+          `Processed image: ${analysis.result.widthPx} × ${analysis.result.heightPx} px`;
+
+        resultPrintEl.textContent =
+          `Processed max print size at 300 DPI: ${analysis.result.maxPrintWidthAt300Dpi}" × ${analysis.result.maxPrintHeightAt300Dpi}"`;
+
+        requestedSizeEl.textContent =
+          `Requested print size: ${analysis.desiredPrintWidthInches}" × ${analysis.recommendedPrintHeightInches}" at 300 DPI`;
+
+        statusEl.className = 'status good';
+        statusEl.textContent = 'Artwork processed successfully.';
+        resultsCard.classList.remove('hidden');
+      } catch (err) {
+        statusEl.className = 'status error';
+        statusEl.textContent = `Error: ${err.message}`;
+      } finally {
+        submitBtn.disabled = false;
       }
-
-      loader.style.display = 'block';
-      downloadBtn.style.display = 'none';
-      comparison.style.display = 'none';
-      beforeImage.style.display = 'none';
-      afterImage.style.display = 'none';
-      beforeImage.src = '';
-      afterImage.src = '';
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        beforeImage.src = reader.result;
-        beforeImage.style.display = 'block';
-        comparison.style.display = 'flex';
-      };
-      reader.readAsDataURL(file);
-
-      const formData = new FormData();
-      formData.append('image', file);
-
-      fetch('/upscale', {
-        method: 'POST',
-        body: formData
-      })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Upscale failed.');
-        }
-        return data;
-      })
-      .then((data) => {
-        loader.style.display = 'none';
-
-        if (!data.image) {
-          throw new Error('No upscaled image returned.');
-        }
-
-        afterImage.src = data.image;
-        afterImage.style.display = 'block';
-
-        downloadBtn.style.display = 'inline-block';
-        downloadBtn.onclick = () => {
-          const link = document.createElement('a');
-          link.href = data.image;
-          link.download = 'upscaled-image.png';
-          link.click();
-        };
-      })
-      .catch((err) => {
-        loader.style.display = 'none';
-        console.error(err);
-        alert(err.message || 'Upscale failed.');
-      });
-    }
+    });
   </script>
 </body>
 </html>
