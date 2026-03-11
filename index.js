@@ -52,10 +52,10 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       }
     );
 
-    const resultUrl = pixelcutResponse.data?.result_url;
+    const resultUrl = pixelcutResponse.data?.result_url || pixelcutResponse.data?.result?.image_url;
     if (!resultUrl) {
       console.error('❌ PixelCut returned unexpected response:', pixelcutResponse.data);
-      return res.status(500).json({ error: 'PixelCut did not return result_url' });
+      return res.status(500).json({ error: 'PixelCut response format unexpected' });
     }
 
     console.log('✅ PixelCut result URL:', resultUrl);
