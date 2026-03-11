@@ -41,14 +41,13 @@
       100% { transform: rotate(360deg); }
     }
     #comparison {
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: flex-start;
       gap: 2rem;
       flex-wrap: wrap;
       width: 100%;
       margin: 2rem auto;
-      display: none;
     }
     .image-container {
       width: 45%;
@@ -115,28 +114,39 @@
     const comparison = document.getElementById('comparison');
 
     dropArea.addEventListener('click', () => fileInput.click());
+
     dropArea.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropArea.classList.add('dragover');
     });
-    dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+
+    dropArea.addEventListener('dragleave', () => {
+      dropArea.classList.remove('dragover');
+    });
+
     dropArea.addEventListener('drop', (e) => {
       e.preventDefault();
       dropArea.classList.remove('dragover');
       fileInput.files = e.dataTransfer.files;
       uploadAndUpscale();
     });
+
     fileInput.addEventListener('change', uploadAndUpscale);
 
     function uploadAndUpscale() {
       const file = fileInput.files[0];
-      if (!file) return alert('Please choose or drop an image');
+      if (!file) {
+        alert('Please choose or drop an image');
+        return;
+      }
 
       loader.style.display = 'block';
       downloadBtn.style.display = 'none';
       comparison.style.display = 'none';
       beforeImage.style.display = 'none';
       afterImage.style.display = 'none';
+      beforeImage.src = '';
+      afterImage.src = '';
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -153,11 +163,23 @@
         method: 'POST',
         body: formData
       })
-      .then(res => res.json())
-      .then(data => {
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Upscale failed.');
+        }
+        return data;
+      })
+      .then((data) => {
         loader.style.display = 'none';
+
+        if (!data.image) {
+          throw new Error('No upscaled image returned.');
+        }
+
         afterImage.src = data.image;
         afterImage.style.display = 'block';
+
         downloadBtn.style.display = 'inline-block';
         downloadBtn.onclick = () => {
           const link = document.createElement('a');
@@ -166,10 +188,10 @@
           link.click();
         };
       })
-      .catch(err => {
+      .catch((err) => {
         loader.style.display = 'none';
         console.error(err);
-        alert('Upscale failed.');
+        alert(err.message || 'Upscale failed.');
       });
     }
   </script>
