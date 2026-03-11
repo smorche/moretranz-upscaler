@@ -36,6 +36,9 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       contentType: req.file.mimetype || 'image/png'
     });
 
+    // PixelCut requires scale parameter
+    form.append('scale', '2')
+    
     console.log('📤 Sending to PixelCut...');
 
     const pixelcutResponse = await axios.post(
