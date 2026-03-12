@@ -9,13 +9,22 @@ require('dotenv').config();
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://moretranz.com',
+    'https://www.moretranz.com'
+  ],
+  methods: ['GET', 'POST', 'OPTIONS']
+}));
+
 app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.send('MoreTranz Artwork Enhancer API is running.');
+});
 
 app.post('/upscale', upload.single('image'), async (req, res) => {
   try {
-    console.log('Incoming request to /upscale');
-
     if (!req.file || !req.file.buffer) {
       return res.status(400).json({ error: 'No image uploaded' });
     }
@@ -40,9 +49,6 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
 
     const originalMaxWidth = originalWidth / 300;
     const originalMaxHeight = originalHeight / 300;
-
-    const maxEnhancedWidthAt4x = (originalWidth * 4) / 300;
-    const maxEnhancedHeightAt4x = (originalHeight * 4) / 300;
 
     const requestedScale = requiredWidthPx / originalWidth;
 
@@ -76,8 +82,6 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
       });
       form.append('scale', String(scale));
 
-      console.log(`Sending to PixelCut with ${scale}x upscale`);
-
       const pixelcutResponse = await axios.post(
         'https://api.developer.pixelcut.ai/v1/upscale',
         form,
@@ -97,7 +101,6 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
 
       if (pixelcutResponse.status >= 400) {
         const errorText = Buffer.from(pixelcutResponse.data).toString('utf8');
-        console.error('PixelCut error:', errorText);
         return res.status(pixelcutResponse.status).json({
           error: 'PixelCut request failed',
           details: errorText
@@ -161,22 +164,10 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
         requiredWidthPx,
         requiredHeightPx,
         scale,
-        enhancementApplied,
-        maxEnhancedWidthAt4x: maxEnhancedWidthAt4x.toFixed(2),
-        maxEnhancedHeightAt4x: maxEnhancedHeightAt4x.toFixed(2)
+        enhancementApplied
       }
     });
   } catch (error) {
-    console.error('Upscale error:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data
-        ? Buffer.isBuffer(error.response.data)
-          ? error.response.data.toString('utf8')
-          : error.response.data
-        : null
-    });
-
     return res.status(500).json({
       error: 'Upscale failed',
       details: error.message
