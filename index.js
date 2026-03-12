@@ -44,9 +44,9 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     const maxEnhancedWidthAt4x = (originalWidth * 4) / 300;
     const maxEnhancedHeightAt4x = (originalHeight * 4) / 300;
 
-    let requestedScale = requiredWidthPx / originalWidth;
-    let scale;
+    const requestedScale = requiredWidthPx / originalWidth;
 
+    let scale;
     if (requestedScale <= 1) {
       scale = 1;
     } else if (requestedScale <= 2) {

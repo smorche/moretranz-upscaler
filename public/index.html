@@ -38,20 +38,19 @@
     .subtext {
       color: #4b5563;
       margin-bottom: 18px;
-      line-height: 1.5;
+      line-height: 1.55;
       max-width: 920px;
     }
 
-    /* Smaller, not full-width upload area */
     .drop-zone-wrap {
-      max-width: 620px;
+      max-width: 560px;
       margin: 0 auto 10px auto;
     }
 
     .drop-zone {
       border: 2px dashed #93c5fd;
       border-radius: 16px;
-      padding: 22px 18px;
+      padding: 18px 16px;
       text-align: center;
       background: #f9fbff;
       transition: all 0.2s ease;
@@ -111,11 +110,12 @@
       margin-top: 10px;
       color: #6b7280;
       font-size: 14px;
+      line-height: 1.45;
     }
 
-    .grid-2 {
+    .top-grid {
       display: grid;
-      grid-template-columns: 0.82fr 1.18fr;
+      grid-template-columns: 0.8fr 1.2fr;
       gap: 24px;
       margin-top: 22px;
       align-items: start;
@@ -123,7 +123,7 @@
 
     .results-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.28fr 0.72fr;
       gap: 24px;
       align-items: start;
     }
@@ -136,15 +136,15 @@
       min-height: 220px;
     }
 
-    /* Original preview reduced by about 1/3 */
     .preview-img {
       width: 100%;
-      max-width: 240px;
+      max-width: 220px;
       height: auto;
       border-radius: 12px;
       display: block;
       margin-bottom: 14px;
       border: 1px solid #e5e7eb;
+      background: #fff;
     }
 
     .label {
@@ -160,7 +160,44 @@
       border: 1px solid #d1d5db;
       border-radius: 12px;
       font-size: 16px;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
+    }
+
+    .live-check-box {
+      max-width: 420px;
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+    }
+
+    .live-check-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .live-check-line {
+      margin: 6px 0;
+      color: #374151;
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .live-good {
+      color: #065f46;
+      font-weight: 700;
+    }
+
+    .live-warn {
+      color: #9a3412;
+      font-weight: 700;
+    }
+
+    .live-info {
+      color: #1d4ed8;
+      font-weight: 700;
     }
 
     .status-box {
@@ -235,23 +272,11 @@
       padding-left: 34px;
     }
 
-    .bottom-cta {
-      margin-top: 24px;
-      text-align: center;
-    }
-
-    .bottom-cta p {
-      margin-bottom: 12px;
-      color: #4b5563;
-      font-weight: 600;
-    }
-
-    /* Larger slider area */
     .preview-stage {
       position: relative;
       width: 100%;
-      max-width: 620px;
-      margin-bottom: 14px;
+      max-width: 680px;
+      margin-bottom: 16px;
     }
 
     .preview-label-row {
@@ -265,20 +290,24 @@
       font-size: 15px;
     }
 
-    .preview-label-row div:last-child {
+    .preview-label-row .label-right {
       text-align: right;
-      max-width: 40%;
+      max-width: 38%;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .preview-viewport {
       position: relative;
       width: 100%;
-      height: 430px;
       border-radius: 14px;
       overflow: hidden;
       border: 1px solid #e5e7eb;
       background: #f8fafc;
+      user-select: none;
+      touch-action: none;
+      aspect-ratio: 1 / 1;
     }
 
     .preview-layer {
@@ -288,6 +317,7 @@
       height: 100%;
       object-fit: contain;
       background: #fff;
+      pointer-events: none;
     }
 
     .slider-overlay {
@@ -295,6 +325,7 @@
       inset: 0;
       overflow: hidden;
       border-right: 3px solid #1f2a5a;
+      pointer-events: none;
     }
 
     .slider-handle {
@@ -312,8 +343,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 58px;
-      height: 58px;
+      width: 60px;
+      height: 60px;
       border-radius: 999px;
       background: #1f2a5a;
       color: #fff;
@@ -324,10 +355,26 @@
       font-weight: 700;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
       border: 3px solid #fff;
+      pointer-events: none;
     }
 
     .slider-knob span {
       letter-spacing: 1px;
+    }
+
+    .download-btn {
+      margin-top: 4px;
+    }
+
+    .bottom-cta {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .bottom-cta p {
+      margin-bottom: 12px;
+      color: #4b5563;
+      font-weight: 600;
     }
 
     @keyframes spin {
@@ -337,33 +384,32 @@
     }
 
     @media (max-width: 900px) {
-      .grid-2,
+      .top-grid,
       .results-grid {
         grid-template-columns: 1fr;
       }
 
-      .drop-zone-wrap {
-        max-width: 100%;
-      }
-
+      .drop-zone-wrap,
       .preview-stage {
         max-width: 100%;
       }
 
-      .preview-viewport {
-        height: 320px;
-      }
-
       .preview-img {
-        max-width: 220px;
+        max-width: 200px;
       }
 
       .preview-label-row {
         font-size: 14px;
       }
 
-      .preview-label-row div:last-child {
-        max-width: 45%;
+      .preview-label-row .label-right {
+        max-width: 42%;
+      }
+
+      .slider-knob {
+        width: 52px;
+        height: 52px;
+        font-size: 24px;
       }
     }
   </style>
@@ -386,7 +432,7 @@
         </div>
       </div>
 
-      <div class="grid-2">
+      <div class="top-grid">
         <div class="panel">
           <h3>Original Artwork Preview</h3>
           <img id="originalPreview" class="preview-img hidden" alt="Original artwork preview" />
@@ -399,6 +445,12 @@
           <h3>Print Settings</h3>
           <label class="label" for="printWidth">Desired Print Width (inches)</label>
           <input id="printWidth" type="number" min="1" step="0.5" value="8" />
+
+          <div id="liveCheckBox" class="live-check-box hidden">
+            <div class="live-check-title">Live Print Check</div>
+            <div id="liveCheckContent"></div>
+          </div>
+
           <button type="button" class="btn" id="generateBtn" disabled>Generate Print-Ready File</button>
 
           <div id="loadingBox" class="loading-box hidden">
@@ -421,7 +473,7 @@
 
           <div class="preview-label-row">
             <div>Original</div>
-            <div>Enhanced</div>
+            <div class="label-right">Enhanced</div>
           </div>
 
           <div id="previewStage" class="preview-stage hidden">
@@ -468,6 +520,9 @@
     const originalMeta = document.getElementById('originalMeta');
     const originalRecommendation = document.getElementById('originalRecommendation');
 
+    const liveCheckBox = document.getElementById('liveCheckBox');
+    const liveCheckContent = document.getElementById('liveCheckContent');
+
     const resultsCard = document.getElementById('resultsCard');
     const downloadLink = document.getElementById('downloadLink');
     const analysis = document.getElementById('analysis');
@@ -482,6 +537,8 @@
 
     let selectedFile = null;
     let originalImageDataUrl = null;
+    let originalWidth = null;
+    let originalHeight = null;
     let isDraggingSlider = false;
 
     chooseFileBtn.addEventListener('click', () => fileInput.click());
@@ -510,6 +567,10 @@
       }
     });
 
+    printWidthInput.addEventListener('input', () => {
+      updateLivePrintCheck();
+    });
+
     function handleSelectedFile(file) {
       if (!file.type.startsWith('image/')) {
         alert('Please upload an image file.');
@@ -528,6 +589,9 @@
 
         const img = new Image();
         img.onload = function() {
+          originalWidth = img.width;
+          originalHeight = img.height;
+
           originalMeta.textContent = `Original image: ${img.width} × ${img.height} px`;
 
           const maxOriginalWidth = (img.width / 300).toFixed(2);
@@ -537,6 +601,7 @@
             `Maximum print width without enhancement: ${maxOriginalWidth}" • Estimated max width with AI enhancement: ${maxEnhancedWidth}"`;
 
           generateBtn.disabled = false;
+          updateLivePrintCheck();
         };
         img.src = originalImageDataUrl;
       };
@@ -548,6 +613,48 @@
       analysis.innerHTML = '';
       previewStage.classList.add('hidden');
       resetSlider(50);
+    }
+
+    function updateLivePrintCheck() {
+      if (!originalWidth || !originalHeight) {
+        liveCheckBox.classList.add('hidden');
+        return;
+      }
+
+      const printWidth = parseFloat(printWidthInput.value);
+
+      if (!printWidth || printWidth <= 0) {
+        liveCheckBox.classList.add('hidden');
+        return;
+      }
+
+      const printHeight = (originalHeight / originalWidth) * printWidth;
+
+      const originalDpi = originalWidth / printWidth;
+      const enhancedDpi = (originalWidth * 4) / printWidth;
+
+      const originalMaxWidth = originalWidth / 300;
+      const enhancedMaxWidth = (originalWidth * 4) / 300;
+
+      let qualityLine = '';
+      if (enhancedDpi >= 300) {
+        qualityLine = `<div class="live-check-line live-good">✓ AI-enhanced file should support this print size at 300 DPI.</div>`;
+      } else if (enhancedDpi >= 200) {
+        qualityLine = `<div class="live-check-line live-warn">⚠ Even after AI enhancement, this size may print softer than ideal.</div>`;
+      } else {
+        qualityLine = `<div class="live-check-line live-warn">⚠ This requested size is likely too large for a clean result, even after AI enhancement.</div>`;
+      }
+
+      liveCheckContent.innerHTML = `
+        <div class="live-check-line"><strong>Requested size:</strong> ${printWidth.toFixed(2)}" × ${printHeight.toFixed(2)}"</div>
+        <div class="live-check-line"><strong>Current file at that width:</strong> ${Math.round(originalDpi)} DPI</div>
+        <div class="live-check-line"><strong>Estimated AI-enhanced file at that width:</strong> ${Math.round(enhancedDpi)} DPI</div>
+        <div class="live-check-line live-info"><strong>Maximum width without enhancement:</strong> ${originalMaxWidth.toFixed(2)}"</div>
+        <div class="live-check-line live-info"><strong>Estimated maximum width with AI enhancement:</strong> ${enhancedMaxWidth.toFixed(2)}"</div>
+        ${qualityLine}
+      `;
+
+      liveCheckBox.classList.remove('hidden');
     }
 
     generateBtn.addEventListener('click', async () => {
@@ -584,6 +691,9 @@
 
         beforeImage.src = originalImageDataUrl;
         afterImage.src = data.image;
+
+        setPreviewAspectRatio(data.analysis.processedWidth, data.analysis.processedHeight);
+
         previewStage.classList.remove('hidden');
         resetSlider(50);
 
@@ -602,6 +712,11 @@
         loadingBox.classList.add('hidden');
       }
     });
+
+    function setPreviewAspectRatio(width, height) {
+      if (!width || !height) return;
+      previewViewport.style.aspectRatio = `${width} / ${height}`;
+    }
 
     function renderStatus(analysisData) {
       statusBox.className = 'status-box';
@@ -633,46 +748,49 @@
     }
 
     function resetSlider(percent) {
-      sliderOverlay.style.width = `${percent}%`;
-      sliderHandle.style.left = `${percent}%`;
+      const clamped = Math.max(0, Math.min(100, percent));
+      sliderOverlay.style.width = `${clamped}%`;
+      sliderHandle.style.left = `${clamped}%`;
     }
 
-    function updateSlider(clientX) {
+    function updateSliderFromClientX(clientX) {
       const rect = previewViewport.getBoundingClientRect();
-      let percent = ((clientX - rect.left) / rect.width) * 100;
-      percent = Math.max(0, Math.min(100, percent));
+      const percent = ((clientX - rect.left) / rect.width) * 100;
       resetSlider(percent);
     }
 
-    sliderHandle.addEventListener('mousedown', () => {
+    function startSliderDrag(clientX) {
       isDraggingSlider = true;
-    });
+      updateSliderFromClientX(clientX);
+    }
 
-    window.addEventListener('mouseup', () => {
+    function stopSliderDrag() {
       isDraggingSlider = false;
+    }
+
+    previewViewport.addEventListener('mousedown', (e) => {
+      startSliderDrag(e.clientX);
     });
 
     window.addEventListener('mousemove', (e) => {
       if (!isDraggingSlider) return;
-      updateSlider(e.clientX);
+      updateSliderFromClientX(e.clientX);
     });
 
-    previewViewport.addEventListener('click', (e) => {
-      updateSlider(e.clientX);
-    });
+    window.addEventListener('mouseup', stopSliderDrag);
+    window.addEventListener('mouseleave', stopSliderDrag);
 
-    sliderHandle.addEventListener('touchstart', () => {
-      isDraggingSlider = true;
+    previewViewport.addEventListener('touchstart', (e) => {
+      startSliderDrag(e.touches[0].clientX);
     }, { passive: true });
-
-    window.addEventListener('touchend', () => {
-      isDraggingSlider = false;
-    });
 
     window.addEventListener('touchmove', (e) => {
       if (!isDraggingSlider) return;
-      updateSlider(e.touches[0].clientX);
+      updateSliderFromClientX(e.touches[0].clientX);
     }, { passive: true });
+
+    window.addEventListener('touchend', stopSliderDrag);
+    window.addEventListener('touchcancel', stopSliderDrag);
   </script>
 </body>
 </html>
