@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Free Artwork Quality Checker | MoreTranz</title>
-  <script type="module" src="https://unpkg.com/img-comparison-slider@8/dist/index.js"></script>
+  <title>Artwork Upscaler</title>
   <style>
     * {
       box-sizing: border-box;
@@ -12,85 +11,129 @@
 
     body {
       margin: 0;
-      background: #000000;
-      color: #111111;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Arial, sans-serif;
+      color: #111827;
+      background: transparent;
     }
 
-    .page-wrap {
+    .tool-wrap {
       max-width: 1100px;
-      margin: 40px auto 60px;
-      padding: 0 20px;
+      margin: 40px auto;
+      padding: 0 16px;
     }
 
     .card {
-      background: #ffffff;
-      border-radius: 16px;
+      background: #fff;
+      border-radius: 18px;
       padding: 28px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
       margin-bottom: 28px;
     }
 
     h1, h2, h3 {
       margin-top: 0;
+      color: #111827;
     }
 
-    .hero-copy {
-      color: #555555;
-      margin-bottom: 24px;
+    .subtext {
+      color: #6b7280;
+      margin-bottom: 18px;
       line-height: 1.5;
-    }
-
-    .support-text {
-      color: #666666;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .upload-grid,
-    .result-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 28px;
-      align-items: start;
     }
 
     .drop-zone {
-      border: 2px dashed #9db3ff;
-      border-radius: 14px;
-      padding: 34px 20px;
+      border: 2px dashed #93c5fd;
+      border-radius: 16px;
+      padding: 36px 20px;
       text-align: center;
-      background: #fafbff;
-      transition: 0.2s ease;
-      margin-bottom: 22px;
+      background: #f9fbff;
+      transition: all 0.2s ease;
+      cursor: pointer;
     }
 
     .drop-zone.dragover {
-      background: #eef3ff;
-      border-color: #4c6fff;
+      background: #eef4ff;
+      border-color: #2563eb;
+    }
+
+    .drop-zone strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 10px;
     }
 
     .drop-zone p {
       margin: 8px 0;
-      color: #444444;
+      color: #6b7280;
     }
 
-    .preview-box {
-      border: 1px solid #e5e5e5;
+    .btn,
+    .download-btn {
+      display: inline-block;
+      border: 0;
       border-radius: 12px;
-      padding: 14px;
-      background: #fafafa;
+      padding: 14px 22px;
+      background: #1f2a5a;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
     }
 
-    .preview-box img {
-      max-width: 100%;
-      max-height: 320px;
+    .btn:hover,
+    .download-btn:hover {
+      opacity: 0.92;
+    }
+
+    .btn[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      background: #e5e7eb;
+      color: #111827;
+      margin-left: 10px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .meta-help {
+      margin-top: 12px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin-top: 24px;
+    }
+
+    .panel {
+      border: 1px solid #eef2f7;
+      border-radius: 16px;
+      padding: 22px;
+      background: #fff;
+      min-height: 250px;
+    }
+
+    .preview-img {
+      width: 100%;
+      max-width: 360px;
+      height: auto;
+      border-radius: 12px;
       display: block;
-      border-radius: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      border: 1px solid #e5e7eb;
     }
 
-    label {
+    .label {
       display: block;
       font-weight: 700;
       margin-bottom: 8px;
@@ -98,300 +141,143 @@
 
     input[type="number"] {
       width: 100%;
-      padding: 12px 14px;
-      border: 1px solid #d9d9d9;
-      border-radius: 10px;
+      padding: 14px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
       font-size: 16px;
-      margin-bottom: 16px;
-    }
-
-    .primary-btn,
-    .secondary-btn,
-    .file-btn {
-      display: inline-block;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 18px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      transition: 0.2s ease;
-    }
-
-    .primary-btn {
-      background: #0d1b52;
-      color: #ffffff;
-    }
-
-    .primary-btn:hover {
-      background: #162870;
-    }
-
-    .secondary-btn {
-      background: #f1f1f1;
-      color: #222222;
-    }
-
-    .secondary-btn:hover {
-      background: #e5e5e5;
-    }
-
-    .file-btn {
-      background: #0d1b52;
-      color: #ffffff;
-      margin-top: 6px;
-    }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    .quality-badge {
-      margin-bottom: 16px;
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-weight: 700;
-      line-height: 1.4;
-    }
-
-    .quality-good {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .quality-warn {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .quality-bad {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .summary-card {
-      background: #f8f9fc;
-      border: 1px solid #e6e9f5;
-      border-radius: 12px;
-      padding: 16px;
-      margin: 14px 0 18px;
-    }
-
-    .summary-card p {
-      margin: 8px 0;
-      font-size: 15px;
-    }
-
-    .loading-state {
-      display: none;
-      margin-top: 16px;
-      padding: 14px 16px;
-      border-radius: 10px;
-      background: #eef3ff;
-      color: #203a8b;
-      font-weight: 700;
-    }
-
-    .comparison-slider {
-      width: 100%;
-      max-width: 100%;
-      --divider-width: 2px;
-      --divider-color: #ffffff;
-      --default-handle-opacity: 1;
       margin-bottom: 18px;
-      border-radius: 12px;
-      overflow: hidden;
+    }
+
+    .status-box {
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .status-good {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .status-upscaled {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .status-warning {
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
     }
 
     .analysis-list p {
-      margin: 8px 0;
+      margin: 10px 0;
       line-height: 1.5;
-    }
-
-    .helper-note {
-      margin-top: 12px;
-      font-size: 14px;
-      line-height: 1.5;
-      color: #666666;
-    }
-
-    .next-step-card {
-      text-align: center;
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 28px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-      margin-top: 28px;
+      color: #374151;
     }
 
     .hidden {
-      display: none !important;
+      display: none;
     }
 
-    .small-meta {
-      color: #555555;
-      font-size: 14px;
-      line-height: 1.5;
+    .loading {
+      margin-top: 14px;
+      color: #1f2a5a;
+      font-weight: 700;
     }
 
-    @media (max-width: 860px) {
-      .upload-grid,
-      .result-grid {
+    @media (max-width: 900px) {
+      .grid-2 {
         grid-template-columns: 1fr;
       }
 
-      .page-wrap {
-        margin-top: 20px;
+      .secondary-btn {
+        margin-left: 0;
+        margin-top: 10px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrap">
+  <div class="tool-wrap">
     <div class="card">
-      <h1>Free Artwork Quality Checker</h1>
-      <p class="hero-copy">
-        Upload your artwork to preview it, check whether it is large enough for clean DTF printing,
-        and generate a print-ready 300 DPI PNG.
+      <h1>Artwork Upscaler</h1>
+      <p class="subtext">
+        Upload your artwork and we’ll enhance it using AI to create a print-ready 300 DPI PNG for DTF transfers.
       </p>
 
       <div id="dropZone" class="drop-zone">
-        <p><strong>Drag &amp; drop your artwork here</strong></p>
+        <strong>Drag &amp; drop your artwork here</strong>
         <p>or</p>
-        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/webp" hidden />
-        <button type="button" id="chooseFileBtn" class="file-btn">Choose File</button>
-        <p class="support-text">
-          Supported formats: PNG, JPG, WEBP<br>
-          Best results come from the highest-resolution artwork available
-        </p>
+        <button type="button" class="btn" id="chooseFileBtn">Choose File</button>
+        <input id="fileInput" class="file-input" type="file" accept="image/png,image/jpeg,image/jpg,image/webp" />
+        <div class="meta-help">Supported formats: PNG, JPG, JPEG, WEBP</div>
       </div>
 
-      <div class="upload-grid">
-        <div>
-          <h2>Original Artwork Preview</h2>
-          <div id="originalPreviewWrap" class="preview-box hidden">
-            <img id="originalPreview" alt="Original artwork preview" />
-            <p class="small-meta" id="fileName"></p>
-            <p class="small-meta" id="originalMeta"></p>
-
-            <div id="precheckSummary" class="summary-card hidden">
-              <p><strong>Maximum print size without enhancement:</strong> <span id="originalMaxWidth"></span></p>
-              <p><strong>Maximum print size with AI enhancement:</strong> <span id="enhancedMaxWidth"></span></p>
-            </div>
-          </div>
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Original Artwork Preview</h3>
+          <img id="originalPreview" class="preview-img hidden" alt="Original artwork preview" />
+          <p id="originalFileName"></p>
+          <p id="originalMeta"></p>
+          <div id="originalRecommendation" class="meta-help"></div>
         </div>
 
-        <div>
-          <h2>Print Settings</h2>
-          <label for="printWidth">Desired Print Width (inches)</label>
-          <input type="number" id="printWidth" step="0.1" min="1" value="8" />
-
-          <div class="btn-row">
-            <button type="button" id="generateBtn" class="primary-btn" disabled>
-              Generate Print-Ready File
-            </button>
-            <button type="button" id="resetBtn" class="secondary-btn hidden">
-              Upload Another Artwork
-            </button>
-          </div>
-
-          <div id="loadingState" class="loading-state">
-            Enhancing artwork and preparing your print-ready file...
-          </div>
+        <div class="panel">
+          <h3>Print Settings</h3>
+          <label class="label" for="printWidth">Desired Print Width (inches)</label>
+          <input id="printWidth" type="number" min="1" step="0.1" value="8" />
+          <button type="button" class="btn" id="generateBtn" disabled>Generate Print-Ready File</button>
+          <button type="button" class="btn secondary-btn" id="resetBtn">Upload Another Artwork</button>
+          <div id="loadingText" class="loading hidden">Enhancing artwork... This may take a few seconds.</div>
         </div>
       </div>
     </div>
 
-    <div id="resultsSection" class="hidden">
-      <div class="card">
-        <div id="qualityBadge" class="quality-badge hidden"></div>
-
-        <h2>Preview Comparison</h2>
-        <p class="hero-copy">
-          Slide to compare your original artwork with the enhanced print-ready version.
-        </p>
-
-        <img-comparison-slider class="comparison-slider">
-          <img slot="first" id="compareOriginal" alt="Original artwork comparison view" />
-          <img slot="second" id="compareEnhanced" alt="Enhanced artwork comparison view" />
-        </img-comparison-slider>
-
-        <div class="btn-row">
-          <a id="downloadLink" class="primary-btn" href="#" download="print-ready-300dpi.png">
-            Download Print-Ready 300 DPI PNG
-          </a>
+    <div id="resultsCard" class="card hidden">
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Enhanced File</h3>
+          <img id="enhancedPreview" class="preview-img hidden" alt="Enhanced artwork preview" />
+          <a id="downloadLink" class="download-btn hidden" href="#" download="print-ready-300dpi.png">Download Print-Ready File</a>
         </div>
 
-        <p class="helper-note">
-          Need a larger print? Upload the highest-resolution artwork available for the sharpest result.
-        </p>
-      </div>
-
-      <div class="card">
-        <div class="result-grid">
-          <div>
-            <h2>Enhanced File</h2>
-            <div class="preview-box">
-              <img id="enhancedPreview" alt="Enhanced artwork preview" />
-            </div>
-          </div>
-
-          <div>
-            <h2>Print Analysis</h2>
-
-            <div class="summary-card">
-              <p><strong>Requested width:</strong> <span id="requestedWidthSummary"></span></p>
-              <p><strong>Best recommended width:</strong> <span id="recommendedWidthSummary"></span></p>
-            </div>
-
-            <div id="analysis" class="analysis-list"></div>
-          </div>
+        <div class="panel">
+          <h3>Print Analysis</h3>
+          <div id="statusBox" class="status-box hidden"></div>
+          <div id="analysis" class="analysis-list"></div>
         </div>
-      </div>
-
-      <div class="next-step-card">
-        <h3>Ready to order your transfer?</h3>
-        <p class="hero-copy">
-          Your artwork has been checked and enhanced for better print quality.
-        </p>
-        <a class="primary-btn" href="/collections/custom-dtf-transfers">Order Your DTF Transfer</a>
       </div>
     </div>
   </div>
 
   <script>
     const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
     const chooseFileBtn = document.getElementById('chooseFileBtn');
+    const fileInput = document.getElementById('fileInput');
     const generateBtn = document.getElementById('generateBtn');
     const resetBtn = document.getElementById('resetBtn');
     const printWidthInput = document.getElementById('printWidth');
+    const loadingText = document.getElementById('loadingText');
 
-    const originalPreviewWrap = document.getElementById('originalPreviewWrap');
     const originalPreview = document.getElementById('originalPreview');
-    const fileNameEl = document.getElementById('fileName');
+    const originalFileName = document.getElementById('originalFileName');
     const originalMeta = document.getElementById('originalMeta');
+    const originalRecommendation = document.getElementById('originalRecommendation');
 
-    const precheckSummary = document.getElementById('precheckSummary');
-    const originalMaxWidth = document.getElementById('originalMaxWidth');
-    const enhancedMaxWidth = document.getElementById('enhancedMaxWidth');
-
-    const loadingState = document.getElementById('loadingState');
-    const resultsSection = document.getElementById('resultsSection');
+    const resultsCard = document.getElementById('resultsCard');
     const enhancedPreview = document.getElementById('enhancedPreview');
     const downloadLink = document.getElementById('downloadLink');
     const analysis = document.getElementById('analysis');
-    const compareOriginal = document.getElementById('compareOriginal');
-    const compareEnhanced = document.getElementById('compareEnhanced');
-    const qualityBadge = document.getElementById('qualityBadge');
-    const requestedWidthSummary = document.getElementById('requestedWidthSummary');
-    const recommendedWidthSummary = document.getElementById('recommendedWidthSummary');
+    const statusBox = document.getElementById('statusBox');
 
     let selectedFile = null;
+    let originalImageWidth = null;
+    let originalImageHeight = null;
 
     chooseFileBtn.addEventListener('click', () => fileInput.click());
 
@@ -419,72 +305,66 @@
       }
     });
 
-    resetBtn.addEventListener('click', resetTool);
-
     function handleSelectedFile(file) {
-      selectedFile = file;
-      generateBtn.disabled = false;
-      resetBtn.classList.remove('hidden');
-      resultsSection.classList.add('hidden');
-      qualityBadge.className = 'quality-badge hidden';
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file.');
+        return;
+      }
 
-      fileNameEl.textContent = 'File: ' + file.name;
+      selectedFile = file;
+      originalFileName.textContent = `File: ${file.name}`;
 
       const reader = new FileReader();
       reader.onload = function(evt) {
         originalPreview.src = evt.target.result;
+        originalPreview.classList.remove('hidden');
 
         const img = new Image();
         img.onload = function() {
-          originalMeta.textContent = 'Original image: ' + img.width + ' × ' + img.height + ' px';
+          originalImageWidth = img.width;
+          originalImageHeight = img.height;
 
-          const originalMax = (img.width / 300).toFixed(2);
-          const enhancedMax = ((img.width * 4) / 300).toFixed(2);
+          originalMeta.textContent = `Original image: ${img.width} × ${img.height} px`;
 
-          originalMaxWidth.textContent = originalMax + '" wide';
-          enhancedMaxWidth.textContent = enhancedMax + '" wide';
+          const maxOriginalWidth = (img.width / 300).toFixed(2);
+          const maxEnhancedWidth = ((img.width * 4) / 300).toFixed(2);
 
-          precheckSummary.classList.remove('hidden');
+          originalRecommendation.textContent =
+            `Maximum print width without enhancement: ${maxOriginalWidth}" • Estimated max width with AI enhancement: ${maxEnhancedWidth}"`;
+
+          generateBtn.disabled = false;
         };
         img.src = evt.target.result;
       };
-
       reader.readAsDataURL(file);
-      originalPreviewWrap.classList.remove('hidden');
-    }
 
-    function resetTool() {
-      selectedFile = null;
-      fileInput.value = '';
-      originalPreview.src = '';
-      enhancedPreview.src = '';
-      compareOriginal.src = '';
-      compareEnhanced.src = '';
-      downloadLink.href = '#';
+      resultsCard.classList.add('hidden');
+      enhancedPreview.classList.add('hidden');
+      downloadLink.classList.add('hidden');
+      statusBox.classList.add('hidden');
       analysis.innerHTML = '';
-      originalPreviewWrap.classList.add('hidden');
-      precheckSummary.classList.add('hidden');
-      resultsSection.classList.add('hidden');
-      loadingState.style.display = 'none';
-      generateBtn.disabled = true;
-      qualityBadge.className = 'quality-badge hidden';
-      requestedWidthSummary.textContent = '';
-      recommendedWidthSummary.textContent = '';
-      fileNameEl.textContent = '';
-      originalMeta.textContent = '';
     }
 
     generateBtn.addEventListener('click', async () => {
-      if (!selectedFile) return;
+      if (!selectedFile) {
+        alert('Please upload an image first.');
+        return;
+      }
+
+      const printWidth = parseFloat(printWidthInput.value);
+
+      if (!printWidth || printWidth <= 0) {
+        alert('Please enter a valid print width.');
+        return;
+      }
 
       generateBtn.disabled = true;
-      loadingState.style.display = 'block';
-      resultsSection.classList.add('hidden');
+      loadingText.classList.remove('hidden');
 
       try {
         const formData = new FormData();
         formData.append('image', selectedFile);
-        formData.append('printWidth', printWidthInput.value);
+        formData.append('printWidth', printWidth);
 
         const res = await fetch('/upscale', {
           method: 'POST',
@@ -498,57 +378,79 @@
         }
 
         enhancedPreview.src = data.image;
+        enhancedPreview.classList.remove('hidden');
+
         downloadLink.href = data.image;
-        compareOriginal.src = originalPreview.src;
-        compareEnhanced.src = data.image;
+        downloadLink.classList.remove('hidden');
 
-        const requestedWidth = Number(data.analysis?.requestedPrintWidth || 0).toFixed(2);
-        const recommendedWidth = Number(data.analysis?.maxPrintWidth || 0).toFixed(2);
+        renderStatus(data.analysis);
+        renderAnalysis(data.analysis);
 
-        requestedWidthSummary.textContent = requestedWidth + '"';
-        recommendedWidthSummary.textContent = recommendedWidth + '"';
-
-        setQualityBadge(data.analysis);
-
-        analysis.innerHTML = `
-          <p><strong>Uploaded artwork size:</strong> ${data.analysis?.originalWidth || ''} × ${data.analysis?.originalHeight || ''} px</p>
-          <p><strong>Maximum print size without enhancement:</strong> ${data.analysis?.originalPrintWidth || ''}" × ${data.analysis?.originalPrintHeight || ''}" at 300 DPI</p>
-          <p><strong>Enhancement applied:</strong> ${data.analysis?.scaleApplied || ''}x upscale</p>
-          <p><strong>Enhanced artwork size:</strong> ${data.analysis?.processedWidth || ''} × ${data.analysis?.processedHeight || ''} px</p>
-          <p><strong>Maximum print size after enhancement:</strong> ${data.analysis?.maxPrintWidth || ''}" × ${data.analysis?.maxPrintHeight || ''}" at 300 DPI</p>
-          <p><strong>Requested print size:</strong> ${data.analysis?.requestedPrintWidth || ''}" × ${data.analysis?.requestedPrintHeight || ''}" at 300 DPI</p>
-          <p><strong>Required pixels for requested size:</strong> ${data.analysis?.requiredWidthPx || ''} × ${data.analysis?.requiredHeightPx || ''} px</p>
-        `;
-
-        resultsSection.classList.remove('hidden');
+        resultsCard.classList.remove('hidden');
+        resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
-        alert(err.message);
+        alert(err.message || 'Processing failed');
       } finally {
         generateBtn.disabled = false;
-        loadingState.style.display = 'none';
+        loadingText.classList.add('hidden');
       }
     });
 
-    function setQualityBadge(analysisData) {
-      const requested = Number(analysisData?.requestedPrintWidth || 0);
-      const maxWidth = Number(analysisData?.maxPrintWidth || 0);
+    resetBtn.addEventListener('click', () => {
+      selectedFile = null;
+      originalImageWidth = null;
+      originalImageHeight = null;
+      fileInput.value = '';
+      printWidthInput.value = '8';
 
-      qualityBadge.classList.remove('hidden', 'quality-good', 'quality-warn', 'quality-bad');
+      originalPreview.src = '';
+      originalPreview.classList.add('hidden');
+      originalFileName.textContent = '';
+      originalMeta.textContent = '';
+      originalRecommendation.textContent = '';
 
-      if (maxWidth >= requested) {
-        qualityBadge.classList.add('quality-good');
-        qualityBadge.textContent = '✅ Print-ready: your artwork is large enough for the requested width.';
-        return;
+      enhancedPreview.src = '';
+      enhancedPreview.classList.add('hidden');
+      downloadLink.classList.add('hidden');
+      downloadLink.href = '#';
+
+      statusBox.textContent = '';
+      statusBox.className = 'status-box hidden';
+
+      analysis.innerHTML = '';
+      resultsCard.classList.add('hidden');
+
+      generateBtn.disabled = true;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    function renderStatus(analysisData) {
+      statusBox.className = 'status-box';
+
+      if (analysisData.status === 'good') {
+        statusBox.classList.add('status-good');
+        statusBox.innerHTML = `✅ <strong>${analysisData.statusTitle}</strong><br>${analysisData.message}`;
+      } else if (analysisData.status === 'upscaled') {
+        statusBox.classList.add('status-upscaled');
+        statusBox.innerHTML = `🧠 <strong>${analysisData.statusTitle}</strong><br>${analysisData.message}`;
+      } else {
+        statusBox.classList.add('status-warning');
+        statusBox.innerHTML = `⚠️ <strong>${analysisData.statusTitle}</strong><br>${analysisData.message}`;
       }
 
-      if (maxWidth >= requested * 0.75) {
-        qualityBadge.classList.add('quality-warn');
-        qualityBadge.textContent = '⚠ Enhanced: quality improved, but the best recommended width is ' + maxWidth.toFixed(2) + '".';
-        return;
-      }
+      statusBox.classList.remove('hidden');
+    }
 
-      qualityBadge.classList.add('quality-bad');
-      qualityBadge.textContent = '❌ Low resolution for the requested size: maximum recommended width is ' + maxWidth.toFixed(2) + '".';
+    function renderAnalysis(analysisData) {
+      analysis.innerHTML = `
+        <p><strong>Uploaded image:</strong> ${analysisData.originalWidth} × ${analysisData.originalHeight} px</p>
+        <p><strong>Maximum print size without enhancement:</strong> ${analysisData.originalMaxWidth}" × ${analysisData.originalMaxHeight}"</p>
+        <p><strong>Enhancement applied:</strong> ${analysisData.enhancementApplied}</p>
+        <p><strong>Processed image:</strong> ${analysisData.processedWidth} × ${analysisData.processedHeight} px</p>
+        <p><strong>Maximum print size after processing:</strong> ${analysisData.processedMaxWidth}" × ${analysisData.processedMaxHeight}"</p>
+        <p><strong>Requested print size:</strong> ${analysisData.requestedPrintWidth}" × ${analysisData.requestedPrintHeight}" at 300 DPI</p>
+        <p><strong>Required pixels for requested size:</strong> ${analysisData.requiredWidthPx} × ${analysisData.requiredHeightPx} px</p>
+      `;
     }
   </script>
 </body>
