@@ -918,14 +918,15 @@
       document.body.scrollHeight,
       document.documentElement.scrollHeight,
       document.body.offsetHeight,
-      document.documentElement.offsetHeight
+      document.documentElement.offsetHeight,
+      document.documentElement.clientHeight
     );
 
     if (window.parent && window.parent !== window) {
       window.parent.postMessage(
         {
           type: 'moretranz-artwork-tool-height',
-          height: height
+          height
         },
         '*'
       );
@@ -933,22 +934,31 @@
   }
 
   function scheduleHeightUpdate() {
-    setTimeout(sendHeightToParent, 50);
-    setTimeout(sendHeightToParent, 150);
-    setTimeout(sendHeightToParent, 300);
-    setTimeout(sendHeightToParent, 600);
+    requestAnimationFrame(() => {
+      sendHeightToParent();
+      setTimeout(sendHeightToParent, 100);
+      setTimeout(sendHeightToParent, 300);
+      setTimeout(sendHeightToParent, 700);
+      setTimeout(sendHeightToParent, 1200);
+    });
   }
 
-  window.addEventListener('load', scheduleHeightUpdate);
-  window.addEventListener('resize', scheduleHeightUpdate);
+  function reportHeight() {
+    scheduleHeightUpdate();
+  }
+
+  window.addEventListener('load', reportHeight);
+  window.addEventListener('resize', reportHeight);
 
   if ('ResizeObserver' in window) {
     const observer = new ResizeObserver(() => {
-      scheduleHeightUpdate();
+      reportHeight();
     });
     observer.observe(document.body);
+    observer.observe(document.documentElement);
   }
-  setInterval(sendHeightToParent. 1000);
+
+  setInterval(sendHeightToParent, 1000);
 </script>
 </body>
 </html>
