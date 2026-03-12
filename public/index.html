@@ -912,5 +912,43 @@
       observer.observe(document.body);
     }
   </script>
+  <script>
+  function sendHeightToParent() {
+    const height = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight
+    );
+
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(
+        {
+          type: 'moretranz-artwork-tool-height',
+          height: height
+        },
+        '*'
+      );
+    }
+  }
+
+  function scheduleHeightUpdate() {
+    setTimeout(sendHeightToParent, 50);
+    setTimeout(sendHeightToParent, 150);
+    setTimeout(sendHeightToParent, 300);
+    setTimeout(sendHeightToParent, 600);
+  }
+
+  window.addEventListener('load', scheduleHeightUpdate);
+  window.addEventListener('resize', scheduleHeightUpdate);
+
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(() => {
+      scheduleHeightUpdate();
+    });
+    observer.observe(document.body);
+  }
+  setInterval(sendHeightToParent. 1000);
+</script>
 </body>
 </html>
