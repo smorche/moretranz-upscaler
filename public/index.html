@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Artwork Upscaler</title>
+  <title>Artwork Enhancer / Quality Checker</title>
   <style>
     * {
       box-sizing: border-box;
@@ -17,17 +17,17 @@
     }
 
     .tool-wrap {
-      max-width: 1100px;
-      margin: 40px auto;
+      max-width: 1120px;
+      margin: 32px auto;
       padding: 0 16px;
     }
 
     .card {
       background: #fff;
       border-radius: 18px;
-      padding: 28px;
+      padding: 24px;
       box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
 
     h1, h2, h3 {
@@ -36,15 +36,16 @@
     }
 
     .subtext {
-      color: #6b7280;
+      color: #4b5563;
       margin-bottom: 18px;
       line-height: 1.5;
+      max-width: 900px;
     }
 
     .drop-zone {
       border: 2px dashed #93c5fd;
       border-radius: 16px;
-      padding: 36px 20px;
+      padding: 32px 20px;
       text-align: center;
       background: #f9fbff;
       transition: all 0.2s ease;
@@ -68,7 +69,8 @@
     }
 
     .btn,
-    .download-btn {
+    .download-btn,
+    .cta-btn {
       display: inline-block;
       border: 0;
       border-radius: 12px;
@@ -79,17 +81,20 @@
       font-weight: 700;
       text-decoration: none;
       cursor: pointer;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
     .btn:hover,
-    .download-btn:hover {
-      opacity: 0.92;
+    .download-btn:hover,
+    .cta-btn:hover {
+      opacity: 0.94;
+      transform: translateY(-1px);
     }
 
     .btn[disabled] {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
 
     .secondary-btn {
@@ -111,16 +116,91 @@
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 28px;
-      margin-top: 24px;
+      gap: 24px;
+      margin-top: 22px;
     }
 
     .panel {
       border: 1px solid #eef2f7;
       border-radius: 16px;
-      padding: 22px;
+      padding: 20px;
       background: #fff;
-      min-height: 250px;
+      min-height: 220px;
+    }
+
+    .preview-stage {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 14px;
+    }
+
+    .preview-viewport {
+      position: relative;
+      width: 100%;
+      height: 320px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: #f8fafc;
+    }
+
+    .preview-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .slider-overlay {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-right: 3px solid #1f2a5a;
+    }
+
+    .slider-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #1f2a5a;
+      z-index: 4;
+      cursor: ew-resize;
+    }
+
+    .slider-knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      background: #1f2a5a;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+      border: 3px solid #fff;
+    }
+
+    .slider-knob span {
+      letter-spacing: 1px;
+    }
+
+    .preview-label-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: #111827;
     }
 
     .preview-img {
@@ -184,10 +264,56 @@
       display: none;
     }
 
-    .loading {
+    .loading-box {
       margin-top: 14px;
-      color: #1f2a5a;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
       font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .loading-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border: 3px solid #bfdbfe;
+      border-top-color: #1d4ed8;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .loading-subtext {
+      font-size: 13px;
+      font-weight: 600;
+      color: #476082;
+      margin-top: 6px;
+      padding-left: 34px;
+    }
+
+    .bottom-cta {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .bottom-cta p {
+      margin-bottom: 12px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     @media (max-width: 900px) {
@@ -199,15 +325,25 @@
         margin-left: 0;
         margin-top: 10px;
       }
+
+      .preview-viewport {
+        height: 260px;
+      }
+
+      .slider-knob {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="tool-wrap">
     <div class="card">
-      <h1>Artwork Upscaler</h1>
+      <h1>Artwork Enhancer / Quality Checker</h1>
       <p class="subtext">
-        Upload your artwork and we’ll enhance it using AI to create a print-ready 300 DPI PNG for DTF transfers.
+        Upload your artwork to enhance image quality with AI and check whether your file is large enough to create a clean, DTF print-ready 300 DPI transfer at your desired print size.
       </p>
 
       <div id="dropZone" class="drop-zone">
@@ -230,10 +366,19 @@
         <div class="panel">
           <h3>Print Settings</h3>
           <label class="label" for="printWidth">Desired Print Width (inches)</label>
-          <input id="printWidth" type="number" min="1" step="0.1" value="8" />
+          <input id="printWidth" type="number" min="1" step="0.5" value="8" />
           <button type="button" class="btn" id="generateBtn" disabled>Generate Print-Ready File</button>
           <button type="button" class="btn secondary-btn" id="resetBtn">Upload Another Artwork</button>
-          <div id="loadingText" class="loading hidden">Enhancing artwork... This may take a few seconds.</div>
+
+          <div id="loadingBox" class="loading-box hidden">
+            <div class="loading-row">
+              <div class="spinner"></div>
+              <div>Working on your print-ready file...</div>
+            </div>
+            <div class="loading-subtext">
+              Enhancing artwork, checking print quality, and preparing your 300 DPI PNG.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -241,8 +386,25 @@
     <div id="resultsCard" class="card hidden">
       <div class="grid-2">
         <div class="panel">
-          <h3>Enhanced File</h3>
-          <img id="enhancedPreview" class="preview-img hidden" alt="Enhanced artwork preview" />
+          <h3>Before / After Preview</h3>
+
+          <div class="preview-label-row">
+            <div>Original</div>
+            <div>Enhanced</div>
+          </div>
+
+          <div id="previewStage" class="preview-stage hidden">
+            <div id="previewViewport" class="preview-viewport">
+              <img id="beforeImage" class="preview-layer" alt="Original preview" />
+              <div id="sliderOverlay" class="slider-overlay" style="width: 50%;">
+                <img id="afterImage" class="preview-layer" alt="Enhanced preview" />
+              </div>
+              <div id="sliderHandle" class="slider-handle" style="left: 50%;">
+                <div class="slider-knob"><span>↔</span></div>
+              </div>
+            </div>
+          </div>
+
           <a id="downloadLink" class="download-btn hidden" href="#" download="print-ready-300dpi.png">Download Print-Ready File</a>
         </div>
 
@@ -251,6 +413,13 @@
           <div id="statusBox" class="status-box hidden"></div>
           <div id="analysis" class="analysis-list"></div>
         </div>
+      </div>
+
+      <div class="bottom-cta">
+        <p>Ready to order your transfer?</p>
+        <a class="cta-btn" href="https://moretranz.com/collections/transfer-types" target="_blank" rel="noopener noreferrer">
+          Shop MoreTranz Transfer Types
+        </a>
       </div>
     </div>
   </div>
@@ -262,7 +431,7 @@
     const generateBtn = document.getElementById('generateBtn');
     const resetBtn = document.getElementById('resetBtn');
     const printWidthInput = document.getElementById('printWidth');
-    const loadingText = document.getElementById('loadingText');
+    const loadingBox = document.getElementById('loadingBox');
 
     const originalPreview = document.getElementById('originalPreview');
     const originalFileName = document.getElementById('originalFileName');
@@ -270,14 +439,20 @@
     const originalRecommendation = document.getElementById('originalRecommendation');
 
     const resultsCard = document.getElementById('resultsCard');
-    const enhancedPreview = document.getElementById('enhancedPreview');
     const downloadLink = document.getElementById('downloadLink');
     const analysis = document.getElementById('analysis');
     const statusBox = document.getElementById('statusBox');
 
+    const previewStage = document.getElementById('previewStage');
+    const previewViewport = document.getElementById('previewViewport');
+    const beforeImage = document.getElementById('beforeImage');
+    const afterImage = document.getElementById('afterImage');
+    const sliderOverlay = document.getElementById('sliderOverlay');
+    const sliderHandle = document.getElementById('sliderHandle');
+
     let selectedFile = null;
-    let originalImageWidth = null;
-    let originalImageHeight = null;
+    let originalImageDataUrl = null;
+    let isDraggingSlider = false;
 
     chooseFileBtn.addEventListener('click', () => fileInput.click());
 
@@ -316,14 +491,12 @@
 
       const reader = new FileReader();
       reader.onload = function(evt) {
-        originalPreview.src = evt.target.result;
+        originalImageDataUrl = evt.target.result;
+        originalPreview.src = originalImageDataUrl;
         originalPreview.classList.remove('hidden');
 
         const img = new Image();
         img.onload = function() {
-          originalImageWidth = img.width;
-          originalImageHeight = img.height;
-
           originalMeta.textContent = `Original image: ${img.width} × ${img.height} px`;
 
           const maxOriginalWidth = (img.width / 300).toFixed(2);
@@ -334,15 +507,16 @@
 
           generateBtn.disabled = false;
         };
-        img.src = evt.target.result;
+        img.src = originalImageDataUrl;
       };
       reader.readAsDataURL(file);
 
       resultsCard.classList.add('hidden');
-      enhancedPreview.classList.add('hidden');
       downloadLink.classList.add('hidden');
       statusBox.classList.add('hidden');
       analysis.innerHTML = '';
+      previewStage.classList.add('hidden');
+      resetSlider(50);
     }
 
     generateBtn.addEventListener('click', async () => {
@@ -359,7 +533,7 @@
       }
 
       generateBtn.disabled = true;
-      loadingText.classList.remove('hidden');
+      loadingBox.classList.remove('hidden');
 
       try {
         const formData = new FormData();
@@ -377,8 +551,10 @@
           throw new Error(data.error || 'Processing failed');
         }
 
-        enhancedPreview.src = data.image;
-        enhancedPreview.classList.remove('hidden');
+        beforeImage.src = originalImageDataUrl;
+        afterImage.src = data.image;
+        previewStage.classList.remove('hidden');
+        resetSlider(50);
 
         downloadLink.href = data.image;
         downloadLink.classList.remove('hidden');
@@ -392,14 +568,13 @@
         alert(err.message || 'Processing failed');
       } finally {
         generateBtn.disabled = false;
-        loadingText.classList.add('hidden');
+        loadingBox.classList.add('hidden');
       }
     });
 
     resetBtn.addEventListener('click', () => {
       selectedFile = null;
-      originalImageWidth = null;
-      originalImageHeight = null;
+      originalImageDataUrl = null;
       fileInput.value = '';
       printWidthInput.value = '8';
 
@@ -409,8 +584,10 @@
       originalMeta.textContent = '';
       originalRecommendation.textContent = '';
 
-      enhancedPreview.src = '';
-      enhancedPreview.classList.add('hidden');
+      beforeImage.src = '';
+      afterImage.src = '';
+      previewStage.classList.add('hidden');
+
       downloadLink.classList.add('hidden');
       downloadLink.href = '#';
 
@@ -421,6 +598,9 @@
       resultsCard.classList.add('hidden');
 
       generateBtn.disabled = true;
+      loadingBox.classList.add('hidden');
+      resetSlider(50);
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
@@ -452,6 +632,48 @@
         <p><strong>Required pixels for requested size:</strong> ${analysisData.requiredWidthPx} × ${analysisData.requiredHeightPx} px</p>
       `;
     }
+
+    function resetSlider(percent) {
+      sliderOverlay.style.width = `${percent}%`;
+      sliderHandle.style.left = `${percent}%`;
+    }
+
+    function updateSlider(clientX) {
+      const rect = previewViewport.getBoundingClientRect();
+      let percent = ((clientX - rect.left) / rect.width) * 100;
+      percent = Math.max(0, Math.min(100, percent));
+      resetSlider(percent);
+    }
+
+    sliderHandle.addEventListener('mousedown', () => {
+      isDraggingSlider = true;
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDraggingSlider = false;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDraggingSlider) return;
+      updateSlider(e.clientX);
+    });
+
+    previewViewport.addEventListener('click', (e) => {
+      updateSlider(e.clientX);
+    });
+
+    sliderHandle.addEventListener('touchstart', () => {
+      isDraggingSlider = true;
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      isDraggingSlider = false;
+    });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isDraggingSlider) return;
+      updateSlider(e.touches[0].clientX);
+    }, { passive: true });
   </script>
 </body>
 </html>

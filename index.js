@@ -27,7 +27,6 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     }
 
     const inputMeta = await sharp(req.file.buffer).metadata();
-
     const originalWidth = inputMeta.width;
     const originalHeight = inputMeta.height;
 
@@ -36,7 +35,6 @@ app.post('/upscale', upload.single('image'), async (req, res) => {
     }
 
     const requestedPrintHeight = (originalHeight / originalWidth) * requestedPrintWidth;
-
     const requiredWidthPx = Math.round(requestedPrintWidth * 300);
     const requiredHeightPx = Math.round(requestedPrintHeight * 300);
 
