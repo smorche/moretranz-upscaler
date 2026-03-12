@@ -644,7 +644,7 @@
 
     printWidthInput.addEventListener('input', () => {
       updateLivePrintCheck();
-      notifyParentHeight();
+      scheduleHeightUpdate();
     });
 
     function handleSelectedFile(file) {
@@ -678,7 +678,7 @@
 
           generateBtn.disabled = false;
           updateLivePrintCheck();
-          notifyParentHeight();
+          scheduleHeightUpdate();
         };
         img.src = originalImageDataUrl;
       };
@@ -690,12 +690,13 @@
       analysis.innerHTML = '';
       previewStage.classList.add('hidden');
       resetSlider(50);
-      notifyParentHeight();
+      scheduleHeightUpdate();
     }
 
     function updateLivePrintCheck() {
       if (!originalWidth || !originalHeight) {
         liveCheckBox.classList.add('hidden');
+        scheduleHeightUpdate();
         return;
       }
 
@@ -703,6 +704,7 @@
 
       if (!printWidth || printWidth <= 0) {
         liveCheckBox.classList.add('hidden');
+        scheduleHeightUpdate();
         return;
       }
 
@@ -733,6 +735,7 @@
       `;
 
       liveCheckBox.classList.remove('hidden');
+      scheduleHeightUpdate();
     }
 
     generateBtn.addEventListener('click', async () => {
@@ -750,7 +753,7 @@
 
       generateBtn.disabled = true;
       loadingBox.classList.remove('hidden');
-      notifyParentHeight();
+      scheduleHeightUpdate();
 
       try {
         const formData = new FormData();
@@ -783,14 +786,14 @@
         renderAnalysis(data.analysis);
 
         resultsCard.classList.remove('hidden');
-        notifyParentHeight();
+        scheduleHeightUpdate();
         resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (err) {
         alert(err.message || 'Processing failed');
       } finally {
         generateBtn.disabled = false;
         loadingBox.classList.add('hidden');
-        notifyParentHeight();
+        scheduleHeightUpdate();
       }
     });
 
@@ -881,13 +884,15 @@
         document.documentElement.offsetHeight
       );
 
-      window.parent.postMessage(
-        {
-          type: 'moretranz-artwork-tool-height',
-          height
-        },
-        '*'
-      );
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(
+          {
+            type: 'moretranz-artwork-tool-height',
+            height: height
+          },
+          '*'
+        );
+      }
     }
 
     function scheduleHeightUpdate() {
@@ -897,18 +902,15 @@
       setTimeout(sendHeightToParent, 600);
     }
 
-    function notifyParentHeight() {
-      scheduleHeightUpdate();
-    }
-
     window.addEventListener('load', scheduleHeightUpdate);
     window.addEventListener('resize', scheduleHeightUpdate);
 
-    const observer = new ResizeObserver(() => {
-      scheduleHeightUpdate();
-    });
-
-    observer.observe(document.body);
+    if ('ResizeObserver' in window) {
+      const observer = new ResizeObserver(() => {
+        scheduleHeightUpdate();
+      });
+      observer.observe(document.body);
+    }
   </script>
 </body>
 </html>
